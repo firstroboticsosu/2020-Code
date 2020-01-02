@@ -23,7 +23,6 @@ import frc.lib.util.DriveSignal;
 import frc.lib.util.HIDHelper;
 import frc.lib.util.Util;
 import frc.robot.Constants;
-import frc.robot.planners.DriveMotionPlanner;
 
 public class Drive extends Subsystem {
 

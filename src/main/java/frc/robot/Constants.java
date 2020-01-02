@@ -35,10 +35,11 @@ public class Constants {
     public static final double ROBOT_MAX_VELOCITY = 72.0; // in/s
     public static final double ROBOT_MAX_ACCEL = 80.0; // in/s^2
     public static final double ROBOT_MAX_VOLTAGE = 11.0; // V
-    public static final double Path_Kx = 4.0;  //
+    public static final double PATH_KX = 4.0;  //
     public static final double PATH_LOOK_AHEAD_TIME = 0.4;  // seconds to look ahead along the path for steering
     public static final double PATH_MIN_LOOK_AHEAD_DISTANCE = 24.0;  // inches
-
+    public static final double PATH_MAX_ACCEL = 80.0; // in/s^2
+    
     //Electrical Constants
     public static final double DRIVE_V_INTERCEPT = 1.04395;  // V     1.04395
     public static final double DRIVE_Kv = 0.32725;  // V per rad/s    0.32725
@@ -77,7 +78,7 @@ public class Constants {
 
     //Startup Constants
     public static final double LOOPER_DT = 0.01; //dt in seconds
-    public static final String ROBOT_NAME = "Bah";
+	
 }
 
 

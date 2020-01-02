@@ -61,6 +61,7 @@ public class Robot extends TimedRobot {
         StateMachine.assertStop();
 
         //reset any subsystems
+        //not normally neccessary for most systems
 
         //start new looper
         disabledLooper.start();

@@ -16,7 +16,7 @@ public class VersionData {
      * reads build data from file and writes to driverstation plus dashboard
      */
     public static void WriteBuildInfoToDashboard() {
-        DriverStation.reportWarning("== Robot Name == " + Constants.ROBOT_NAME + "        |Version ID: " + getInfo("VERSION_ID") + "|", false);
+        DriverStation.reportWarning("Build Version ID: " + getInfo("VERSION_ID") + "|", false);
         DriverStation.reportWarning("Author: " + getInfo("BUILD_AUTHOR") + (Constants.ENABLE_MP_TEST_MODE ? "! MP TEST MODE IS ENABLED!" : ""), false);
         SmartDashboard.putString("Build_Info/ID", getInfo("VERSION_ID"));
         SmartDashboard.putString("Build_Info/Author", getInfo("BUILD_AUTHOR"));
