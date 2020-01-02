@@ -11,7 +11,7 @@ public class StateMachine {
 
     private static final AtomicInteger state = new AtomicInteger(-1);
     private static final AtomicBoolean wantStop = new AtomicBoolean(true),
-     stateLock = new AtomicBoolean(false), isInfinite = new AtomicBoolean(false);
+     stateLock = new AtomicBoolean(false);
     private volatile static StateMachineDescriptor internalDescriptor;
     private volatile static ConcurrentLinkedQueue<ActionGroup> queuedStates;
     private volatile static ActionGroup currentState;
@@ -21,38 +21,35 @@ public class StateMachine {
 
     private static final Runnable Man = () -> {
         try {
-            do{
-                //state goes to 0 to start
-                queuedStates = internalDescriptor.getStates();
-                state.set(0);
+            //state goes to 0 to start
+            queuedStates = internalDescriptor.getStates();
+            state.set(0);
+            SmartDashboard.putNumber("StateMachine/state", state.get());
+
+            if (queuedStates == null) {
+                //a null state queue has been passed
+                //need to set conditions and exit major loop
+                state.set(-2);
                 SmartDashboard.putNumber("StateMachine/state", state.get());
-
-                if (queuedStates == null) {
-                    //a null state queue has been passed
-                    //need to set conditions and exit major loop
-                    state.set(-2);
+            } else {
+                while (!queuedStates.isEmpty() && !wantStop.get()) {
+                    // pull the next element from the queue and run the state
                     SmartDashboard.putNumber("StateMachine/state", state.get());
-                    break;
-                } else {
-                    while (!queuedStates.isEmpty() && !wantStop.get()) {
-                        // pull the next element from the queue and run the state
-                        SmartDashboard.putNumber("StateMachine/state", state.get());
-                        currentState = queuedStates.poll();
-                        currentState.onStart();
+                    currentState = queuedStates.poll();
+                    currentState.onStart();
 
-                        //wait for the state to complete exectuing
-                        while (!currentState.isFinished() && !wantStop.get()) {
-                            t_start = Timer.getFPGATimestamp();
-                            currentState.onLoop();
-                            Timer.delay(delay - (Timer.getFPGATimestamp() - t_start));
-                        }
-
-                        //when complete stop the state and increment the state counter
-                        currentState.onStop();
-                        state.getAndAdd(1);
+                    //wait for the state to complete exectuing
+                    while (!currentState.isFinished() && !wantStop.get()) {
+                        t_start = Timer.getFPGATimestamp();
+                        currentState.onLoop();
+                        Timer.delay(delay - (Timer.getFPGATimestamp() - t_start));
                     }
+
+                    //when complete stop the state and increment the state counter
+                    currentState.onStop();
+                    state.getAndAdd(1);
                 }
-            } while (isInfinite.get() && !wantStop.get());
+            }
             
         }catch (Exception e){
             //error condition, a exception was thrown during state machine execution
@@ -82,7 +79,6 @@ public class StateMachine {
         SmartDashboard.putNumber("StateMachine/state", -1);
         stateLock.set(true);
         wantStop.set(false);
-        isInfinite.set(descriptor instanceof InfiniteStateMachineDescriptor);
 
         //move the new state machine in
         internalDescriptor = descriptor;
