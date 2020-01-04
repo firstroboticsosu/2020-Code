@@ -15,14 +15,19 @@ import frc.lib.drivers.PIDF;
 import frc.lib.geometry.Pose2d;
 import frc.lib.geometry.Pose2dWithCurvature;
 import frc.lib.geometry.Rotation2d;
+import frc.lib.geometry.Translation2d;
+import frc.lib.geometry.Twist2d;
 import frc.lib.loops.ILooper;
 import frc.lib.loops.Loop;
-import frc.lib.trajectory.TrajectoryIterator;
-import frc.lib.trajectory.timing.TimedState;
+import frc.lib.path.AdaptivePurePursuitController;
+import frc.lib.path.Lookahead;
+import frc.lib.path.Path;
+import frc.lib.path.PathFollower;
 import frc.lib.util.DriveSignal;
 import frc.lib.util.HIDHelper;
 import frc.lib.util.Util;
 import frc.robot.Constants;
+import frc.robot.Kinematics;
 
 public class Drive extends Subsystem {
 
@@ -35,67 +40,72 @@ public class Drive extends Subsystem {
 
     //used internally for data
     private DriveControlState mDriveControlState = DriveControlState.OPEN_LOOP;
-    private DriveMotionPlanner mMotionPlanner;
-    private boolean mOverrideTrajectory = false;
     private DriveIO periodicIO;
+
+    // Hardware
     private PigeonIMU pigeonIMU;
     private TalonSRX driveFrontLeft, driveRearLeft, driveFrontRight, driveRearRight;
+    
+    // Controllers
+    private AdaptivePurePursuitController mPathFollower;
+    private Path currentPath;
     private PIDF angleController;
 
-    private final Loop mLoop = new Loop() {
-
-        @Override
-        public void onStart(double timestamp) {
-        }
-
-        @Override
-        public void onLoop(double timestamp) {
-            synchronized (Drive.this) {
-                if (Constants.ENABLE_MP_TEST_MODE && DriverStation.getInstance().isTest()) {
-                    mDriveControlState = DriveControlState.PROFILING_TEST;
-                }
-
-                switch (mDriveControlState) {
-                    case PATH_FOLLOWING:
-                        updatePathFollower();
-                        break;
-
-                    case PROFILING_TEST:
-                    if (DriverStation.getInstance().isTest()) {
-                        if (Constants.RAMPUP) {
-                            periodicIO.left_demand = (periodicIO.ramp_Up_Counter * .0025 + .01);
-                            periodicIO.right_demand = (periodicIO.ramp_Up_Counter * .0025 + .01);
-                            periodicIO.ramp_Up_Counter++;
-                        } else {
-                            periodicIO.left_demand = radiansPerSecondToTicksPer100ms(inchesPerSecondToRadiansPerSecond(Constants.MP_TEST_SPEED));
-                            periodicIO.right_demand = radiansPerSecondToTicksPer100ms(inchesPerSecondToRadiansPerSecond(Constants.MP_TEST_SPEED));
-                        }
-                    }
-                    break;
-
-                    case OPEN_LOOP:
-                        setOpenLoop(arcadeDrive(periodicIO.operatorInput[1], periodicIO.operatorInput[2]).invert());
-                        periodicIO.gyro_pid_angle = periodicIO.gyro_heading.getDegrees();
-                        break;
-
-                    case ANGLE_PID:
-                        final double zRotation = -angleController.update(periodicIO.gyro_heading.getDegrees());
-                        setAnglePidLoop(arcadeDrive(periodicIO.operatorInput[1], zRotation).invert(), periodicIO.gyro_pid_angle);
-                        break;
-            
-                    default:
-                        System.out.println("Unexpected control state");
-                }
-
-
+    public void registerEnabledLoops(ILooper enabledLooper) {
+        enabledLooper.register(new Loop() {
+            @Override
+            public void onStart(double timestamp) {
             }
-        }
-
-        @Override
-        public void onStop(double timestamp) {
-
-        }
-    };
+    
+            @Override
+            public void onLoop(double timestamp) {
+                synchronized (Drive.this) {
+                    if (Constants.ENABLE_MP_TEST_MODE && DriverStation.getInstance().isTest()) {
+                        mDriveControlState = DriveControlState.PROFILING_TEST;
+                    }
+    
+                    switch (mDriveControlState) {
+                        case PATH_FOLLOWING:
+                            updatePathFollower(timestamp);
+                            break;
+    
+                        case PROFILING_TEST:
+                        if (DriverStation.getInstance().isTest()) {
+                            if (Constants.RAMPUP) {
+                                periodicIO.left_demand = (periodicIO.ramp_Up_Counter * .0025 + .01);
+                                periodicIO.right_demand = (periodicIO.ramp_Up_Counter * .0025 + .01);
+                                periodicIO.ramp_Up_Counter++;
+                            } else {
+                                periodicIO.left_demand = radiansPerSecondToTicksPer100ms(inchesPerSecondToRadiansPerSecond(Constants.MP_TEST_SPEED));
+                                periodicIO.right_demand = radiansPerSecondToTicksPer100ms(inchesPerSecondToRadiansPerSecond(Constants.MP_TEST_SPEED));
+                            }
+                        }
+                        break;
+    
+                        case OPEN_LOOP:
+                            setOpenLoop(arcadeDrive(periodicIO.operatorInput[1], periodicIO.operatorInput[2]).invert());
+                            periodicIO.gyro_pid_angle = periodicIO.gyro_heading.getDegrees();
+                            break;
+    
+                        case ANGLE_PID:
+                            final double zRotation = -angleController.update(periodicIO.gyro_heading.getDegrees());
+                            setAnglePidLoop(arcadeDrive(periodicIO.operatorInput[1], zRotation).invert(), periodicIO.gyro_pid_angle);
+                            break;
+                
+                        default:
+                            System.out.println("Unexpected control state");
+                    }
+    
+    
+                }
+            }
+    
+            @Override
+            public void onStop(double timestamp) {
+    
+            }
+        });
+    }
 
     @Override
     public synchronized void readPeriodicInputs() {
@@ -136,7 +146,6 @@ public class Drive extends Subsystem {
     }
 
     private Drive() {
-        mMotionPlanner = new DriveMotionPlanner();
         driveFrontLeft = new TalonSRX(Constants.DRIVE_FRONT_LEFT_ID);
         driveRearLeft = new TalonSRX(Constants.DRIVE_BACK_LEFT_ID);
         driveFrontRight = new TalonSRX(Constants.DRIVE_FRONT_RIGHT_ID);
@@ -192,9 +201,6 @@ public class Drive extends Subsystem {
     }
 
     public void reset() {
-        mOverrideTrajectory = false;
-        mMotionPlanner.reset();
-        mMotionPlanner.setFollowerType(DriveMotionPlanner.FollowerType.NONLINEAR_FEEDBACK);
         periodicIO = new DriveIO();
         setHeading(Rotation2d.fromDegrees(0));
         resetEncoders();
@@ -259,34 +265,74 @@ public class Drive extends Subsystem {
 
     }
 
-    public void overrideTrajectory(boolean value) {
-        mOverrideTrajectory = value;
+    /**
+     * Configures the drivebase to drive a path. Used for autonomous driving
+     *
+     * @see Path
+     */
+    public synchronized void setWantDrivePath(Path path, boolean reversed) {
+        if (path != currentPath || mDriveControlState != DriveControlState.PATH_FOLLOWING) {
+            PoseEstimator.getInstance().resetDistanceDriven();
+            mPathFollower = new AdaptivePurePursuitController(currentPath, reversed, 
+              new Lookahead(Constants.PATH_MIN_LOOK_AHEAD_DIST, Constants.PATH_MAX_LOOK_AHEAD_DIST,
+              Constants.PATH_MIN_LOOK_AHEAD_VEL, Constants.PATH_MAX_LOOK_AHEAD_VEL));
+            mDriveControlState = DriveControlState.PATH_FOLLOWING;
+        } else {
+            setVelocity(new DriveSignal(0, 0), new DriveSignal(0, 0));
+        }
     }
 
-    private void updatePathFollower() {
+    public synchronized boolean isDoneWithPath() {
+        if (mDriveControlState == DriveControlState.PATH_FOLLOWING && mPathFollower != null) {
+            return mPathFollower.isFinished();
+        } else {
+            System.out.println("Robot is not in path following mode");
+            return true;
+        }
+    }
+
+    public synchronized void forceDoneWithPath() {
+        if (mDriveControlState == DriveControlState.PATH_FOLLOWING && mPathFollower != null) {
+            setOpenLoop(DriveSignal.NEUTRAL);
+        } else {
+            System.out.println("Robot is not in path following mode");
+        }
+    }
+
+    private void updatePathFollower(double timestamp) {
         if (mDriveControlState == DriveControlState.PATH_FOLLOWING) {
-            final double now = Timer.getFPGATimestamp();
+            Pose2d field_to_vehicle = PoseEstimator.getInstance().getLatestFieldToVehicle().getValue();
+            AdaptivePurePursuitController.Command command = mPathFollower.update(field_to_vehicle);
+            if (!mPathFollower.isFinished()) {
+                periodicIO.pathLengthRemaining = command.remaining_path_length;
+                periodicIO.lookaheadPt = command.lookahead_point;
+                periodicIO.crossTrackError = command.cross_track_error;
+                DriveSignal setpoint = Kinematics.inverseKinematics(command.delta);
 
-            DriveMotionPlanner.Output output = mMotionPlanner.update(now, PoseEstimator.getInstance().getFieldToVehicle(now));
+                // Scale the command to respect the max velocity limits
+                double max_vel = 0.0;
+                max_vel = Math.max(max_vel, Math.abs(setpoint.getLeft()));
+                max_vel = Math.max(max_vel, Math.abs(setpoint.getRight()));
+                if (max_vel > Constants.PATH_MAX_VEL) {
+                    double scaling = Constants.PATH_MAX_VEL / max_vel;
+                    setpoint = new DriveSignal(setpoint.getLeft() * scaling, setpoint.getRight() * scaling);
+                }
 
-            periodicIO.error = mMotionPlanner.error();
-            periodicIO.path_setpoint = mMotionPlanner.setpoint();
-
-            if (!mOverrideTrajectory) {
-                DriveSignal signal = new DriveSignal(radiansPerSecondToTicksPer100ms(output.left_velocity),
-                        radiansPerSecondToTicksPer100ms(output.right_velocity));
-
-                setVelocity(signal, new DriveSignal(output.left_feedforward_voltage / 12, output.right_feedforward_voltage / 12));
-                periodicIO.left_accl = radiansPerSecondToTicksPer100ms(output.left_accel) / 1000;
-                periodicIO.right_accl = radiansPerSecondToTicksPer100ms(output.right_accel) / 1000;
-
-            } else {
-                setVelocity(DriveSignal.BRAKE, DriveSignal.BRAKE);
-                mDriveControlState = DriveControlState.OPEN_LOOP;
-                mMotionPlanner.reset();
+                //scale to respect velocity inputs
+                setpoint = new DriveSignal(setpoint.getLeft(), setpoint.getRight());
+                setVelocity(setpoint, DriveSignal.NEUTRAL);
             }
         } else {
-            DriverStation.reportError("Drive is not in path following state", false);
+            DriverStation.reportError("drive is not in path following state", false);
+        }
+    }
+
+    public synchronized boolean hasPassedMarker(String marker) {
+        if (mDriveControlState == DriveControlState.PATH_FOLLOWING && mPathFollower != null) {
+            return mPathFollower.hasPassedMarker(marker);
+        } else {
+            System.out.println("Robot is not in path following mode");
+            return false;
         }
     }
 
@@ -347,33 +393,13 @@ public class Drive extends Subsystem {
         periodicIO.right_feedforward = feedforward.getRight();
     }
 
-    public synchronized void setTrajectory(TrajectoryIterator<TimedState<Pose2dWithCurvature>> trajectory) {
-        if (mMotionPlanner != null) {
-            mOverrideTrajectory = false;
-            mMotionPlanner.reset();
-            mMotionPlanner.setTrajectory(trajectory);
-            mDriveControlState = DriveControlState.PATH_FOLLOWING;
-        }
-    }
-
-    public boolean isDoneWithTrajectory() {
-        if (mMotionPlanner == null || mDriveControlState != DriveControlState.PATH_FOLLOWING) {
-            return true;
-        }
-        return mMotionPlanner.isDone() || mOverrideTrajectory;
-    }
-
-    public void registerEnabledLoops(ILooper enabledLooper) {
-        enabledLooper.register(mLoop);
-    }
-
     @Override
     public PeriodicIO getLogger() {
         return periodicIO;
     }
 
     public void onStop(){
-        overrideTrajectory(true);
+        forceDoneWithPath();
         setOpenLoop(DriveSignal.NEUTRAL);
     }
 
@@ -438,8 +464,9 @@ public class Drive extends Subsystem {
         public Rotation2d gyro_offset = Rotation2d.identity();
 
         // Pose system values
-        public Pose2d error = Pose2d.identity();
-        public TimedState<Pose2dWithCurvature> path_setpoint = new TimedState<>(Pose2dWithCurvature.identity());
+        public Translation2d lookaheadPt = Translation2d.identity();
+        public double crossTrackError = 0.0;
+        public double pathLengthRemaining = 0.0;
 
         // Gyro PID input
         public double gyro_pid_angle = 0.0;

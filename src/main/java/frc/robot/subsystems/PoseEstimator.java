@@ -21,6 +21,8 @@ public class PoseEstimator extends Subsystem {
     private static final int observation_buffer_size_ = 100;
 
     private PoseIO periodicIO;
+    public InterpolatingTreeMap<InterpolatingDouble, Pose2d> field_to_vehicle_;
+
 
     private Loop mLoop = new Loop(){
 
@@ -40,7 +42,8 @@ public class PoseEstimator extends Subsystem {
                 final double delta_left = left_distance - periodicIO.left_encoder_prev_distance_;
                 final double delta_right = right_distance - periodicIO.right_encoder_prev_distance_;
                 final Twist2d odometry_velocity = generateOdometryFromSensors(delta_left, delta_right, gyro_angle);
-                addObservations(timestamp, Kinematics.integrateForwardKinematics(getLatestFieldToVehicle().getValue(), odometry_velocity));
+                addObservations(timestamp, Kinematics.integrateForwardKinematics(getLatestFieldToVehicle().getValue(), odometry_velocity),
+                    odometry_velocity);
                 periodicIO.left_encoder_prev_distance_ = left_distance;
                 periodicIO.right_encoder_prev_distance_ = right_distance;
                 outputTelemetry();
@@ -63,17 +66,18 @@ public class PoseEstimator extends Subsystem {
 
     public void reset(double start_time, Pose2d initial_field_to_vehicle){
         periodicIO = new PoseIO();
-        periodicIO.field_to_vehicle_ = new InterpolatingTreeMap<>(observation_buffer_size_);
-        periodicIO.field_to_vehicle_.put(new InterpolatingDouble(start_time), initial_field_to_vehicle);
+        field_to_vehicle_ = new InterpolatingTreeMap<>(observation_buffer_size_);
+        field_to_vehicle_.put(new InterpolatingDouble(start_time), initial_field_to_vehicle);
         periodicIO.distance_driven_ = 0.0;
+        periodicIO.vehicle_velocity_predicted_ = Twist2d.identity();
     }
 
     public synchronized Map.Entry<InterpolatingDouble, Pose2d> getLatestFieldToVehicle() {
-        return periodicIO.field_to_vehicle_.lastEntry();
+        return field_to_vehicle_.lastEntry();
     }
 
     public synchronized Pose2d getFieldToVehicle(double timestamp) {
-        return periodicIO.field_to_vehicle_.getInterpolated(new InterpolatingDouble(timestamp));
+        return field_to_vehicle_.getInterpolated(new InterpolatingDouble(timestamp));
     }
 
     public synchronized Twist2d generateOdometryFromSensors(double left_encoder_delta_distance, double
@@ -83,15 +87,25 @@ public class PoseEstimator extends Subsystem {
                 left_encoder_delta_distance, right_encoder_delta_distance,
                 current_gyro_angle);
         periodicIO.distance_driven_ += delta.dx; 
+
         return delta;
     }
 
-    public synchronized void addObservations(double timestamp, Pose2d observation) {
-        periodicIO.field_to_vehicle_.put(new InterpolatingDouble(timestamp), observation);
+    public synchronized void addObservations(double timestamp, Pose2d observation, Twist2d velocity) {
+        field_to_vehicle_.put(new InterpolatingDouble(timestamp), observation);
+        periodicIO.vehicle_velocity_predicted_ = velocity;
     }
 
-    public double getDistanceDriven(){
+    public synchronized double getDistanceDriven() {
         return periodicIO.distance_driven_;
+    }
+
+    public synchronized void resetDistanceDriven() {
+        periodicIO.distance_driven_ = 0.0;
+    }
+
+    public synchronized Twist2d getPredictedVelocity() {
+        return periodicIO.vehicle_velocity_predicted_;
     }
 
     @Override
@@ -124,10 +138,10 @@ public class PoseEstimator extends Subsystem {
 
     public class PoseIO extends PeriodicIO{
         public Pose2d current;
-        public InterpolatingTreeMap<InterpolatingDouble, Pose2d> field_to_vehicle_;
         public double distance_driven_= 0.0;
         public double left_encoder_prev_distance_ = 0.0;
         public double right_encoder_prev_distance_ = 0.0;
+        public Twist2d vehicle_velocity_predicted_;
 
     }
 
