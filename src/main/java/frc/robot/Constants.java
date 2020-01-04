@@ -23,22 +23,25 @@ public class Constants {
      */
 
     //Physical Constants
-    public static final double DRIVE_WHEEL_TRACK_WIDTH_INCHES = 25;
     public static final double DRIVE_WHEEL_DIAMETER_INCHES = 7.75; // 7 3/4
     public static final double DRIVE_WHEEL_RADIUS_INCHES = DRIVE_WHEEL_DIAMETER_INCHES / 2.0;
     public static final double TRACK_SCRUB_FACTOR = 2.38;  // determined 2.38
+    public static final double TRACK_WIDTH_INCHES = 25;
     public static final double ROBOT_LINEAR_INERTIA = 30;  // kg roughly 60 lb
     public static final double ROBOT_ANGULAR_INERTIA = 8.0;  // kg m^2 TODO tune just a guess
     public static final double ROBOT_ANGULAR_DRAG = 20.0;  // N*m / (rad/sec) TODO tune just a guess
-
-    //Path following Constants
     public static final double ROBOT_MAX_VELOCITY = 72.0; // in/s
     public static final double ROBOT_MAX_ACCEL = 80.0; // in/s^2
     public static final double ROBOT_MAX_VOLTAGE = 11.0; // V
+
+
     public static final double PATH_KX = 4.0;  //
     public static final double PATH_LOOK_AHEAD_TIME = 0.4;  // seconds to look ahead along the path for steering
-    public static final double PATH_MIN_LOOK_AHEAD_DISTANCE = 24.0;  // inches
-    public static final double PATH_MAX_ACCEL = 80.0; // in/s^2
+    public static final double PATH_MIN_LOOK_AHEAD_DIST = 12.0;  // inches
+    public static final double PATH_MIN_LOOK_AHEAD_VEL = 24.0;  // inches/s
+    public static final double PATH_MAX_LOOK_AHEAD_DIST = 60.0;  // inches
+    public static final double PATH_MAX_LOOK_AHEAD_VEL = 96.0;  // inches/s
+    public static final double PATH_MAX_VEL = 96.0;  // inches/s
     
     //Electrical Constants
     public static final double DRIVE_V_INTERCEPT = 1.04395;  // V     1.04395
@@ -78,6 +81,7 @@ public class Constants {
 
     //Startup Constants
     public static final double LOOPER_DT = 0.01; //dt in seconds
+	public static final double PATH_MAX_ACCEL = 0;
 	
 }
 
