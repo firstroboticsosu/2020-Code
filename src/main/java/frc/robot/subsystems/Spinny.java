@@ -9,6 +9,7 @@ import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.drivers.PIDF;
 import frc.lib.geometry.Pose2d;
@@ -38,17 +39,15 @@ public class Spinny extends Subsystem {
     }
 
     // Spinner colors in clockwise order
-    private ArrayList<String> spinnerColors = new ArrayList<String>(Arrays.asList("blue", "green", "red", "yellow"));
-    private String activeColor = null;
-    private double distanceSpun = 0.0;
+    private ArrayList<String> spinnerColors = new ArrayList<String>(Arrays.asList("B", "G", "R", "Y"));
 
     //used internally for data
     private SpinnyControlState mSpinnyControlState = SpinnyControlState.INACTIVE;
     private SpinnyIO periodicIO;
-    private int inactiveEncodingTimeRemaining = 0;
 
     // Hardware
     private TalonSRX spinMotor;
+    private ColorSensor colorSensor;
 
     public void registerEnabledLoops(ILooper enabledLooper) {
         enabledLooper.register(new Loop() {
@@ -68,10 +67,10 @@ public class Spinny extends Subsystem {
 
                         case INACTIVE_ENCODING:
                             updateEncoding();
-                            inactiveEncodingTimeRemaining--; // TODO change to real time using timestamp
-                            if (inactiveEncodingTimeRemaining <= 0) {
+                            if (timestamp - periodicIO.startTimestamp >= Constants.INACTIVE_ENCODING_STATE_TIME) {
                                 mSpinnyControlState = SpinnyControlState.INACTIVE;
-                                activeColor = null;
+                                periodicIO.spin_distance = 0.0;
+                                periodicIO.activeColor = null;
                             }
 
                         case AUTO_SPIN:
@@ -81,34 +80,29 @@ public class Spinny extends Subsystem {
 
                         case AUTO_COLOR:
                             updateEncoding();
-                            if (activeColor != null && hasTargetColor) {
-
-                                // sensorColor is the color likely in the sensor given the current color we're seeing
-                                String sensorColor = spinnerColors.get((spinnerColors.indexOf(activeColor) + 2) % 4);
-
-                                String targetColor = "blue"; // todo initialize for real
+                            if (periodicIO.activeTargetColor != null) {
 
                                 // If we're already on target
-                                if (sensorColor.equals(targetColor)) {
+                                if (periodicIO.activeColor.equals(periodicIO.activeTargetColor)) {
                                     initInactiveEncodingState();
                                 }
                                 // If the target is counter-clockwise one step
-                                else if (spinnerColors.indexOf(sensorColor) == spinnerColors.indexOf(targetColor) - 1) {
-                                    // TODO move backward
+                                else if (spinnerColors.indexOf(periodicIO.activeColor) == spinnerColors.indexOf(periodicIO.activeTargetColor) - 1) {
+                                    periodicIO.spin_demand = Constants.AUTO_COLOR_BACKWARD_SPEED;
                                 }
                                 // If the target is clockwise one or two steps
                                 else {
-                                    // TODO move forward
+                                    periodicIO.spin_demand = Constants.AUTO_COLOR_FORWARD_SPEED;
                                 }
                             }
                             break;
 
                         case MANUAL:
                             updateEncoding();
-                            if (/* forward button pressed */) {
+                            if (periodicIO.forwardButtonPressed) {
                                 periodicIO.spin_demand = Constants.PERCENT_MANUAL_FORWARD;
                             }
-                            else if (/* backward button pressed */) {
+                            else if (periodicIO.backwardButtonPressed) {
                                 periodicIO.spin_demand = Constants.PERCENT_MANUAL_BACKWARD;
                             }
                             else {
@@ -131,22 +125,32 @@ public class Spinny extends Subsystem {
     }
 
     private void initInactiveEncodingState() {
-        inactiveEncodingTimeRemaining = Constants.INACTIVE_ENCODING_STATE_TIME;
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
     }
 
     private void updateEncoding() {
         rawColorData = getRawColorData;
         String color = resolveToColor(rawColorData.red, rawColorData.green, rawColorData.blue);
-        if (color == null) {
-            activeColor = null;
-        }
-        else if (!color.equals(activeColor)) {
-            if (activeColor != null) {
-                distanceSpun += 0.125;
+        if (color != null && !color.equals(periodicIO.activeColor)) {
+            if (periodicIO.activeColor != null) {
+                periodicIO.spin_distance += 0.125;
             }
-            activeColor = color;
+            periodicIO.activeColor = color;
         }
+    }
+
+    public void initAutoColor() {
+        String targetColor = DriverStation.getInstance().getGameSpecificMessage();
+        if (!spinnerColors.contains(targetColor))
+            return;
+        periodicIO.activeTargetColor = spinnerColors.get((spinnerColors.indexOf(targetColor) + 2) % 4);
+        mSpinnyControlState = SpinnyControlState.AUTO_COLOR;
+    }
+
+    public void abort() {
+        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
+        periodicIO.startTimestamp = Timer.getFPGATimestamp();
+
     }
 
     @Override
@@ -161,12 +165,33 @@ public class Spinny extends Subsystem {
 
     private Spinny() {
         spinMotor = new TalonSRX(Constants.SPINNY_ID);
+        configTalons();
         reset();
 
     }
 
     public void reset() {
         periodicIO = new Spinny.SpinnyIO();
+        abort();
+    }
+
+    private void configTalons() {
+        ErrorCode sensorPresent;
+        sensorPresent = spinMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 100); //primary closed-loop, 100 ms timeout
+        if (sensorPresent != ErrorCode.OK) {
+            DriverStation.reportError("Could not detect left encoder: " + sensorPresent, false);
+        }
+        spinMotor.setSensorPhase(true);
+        spinMotor.selectProfileSlot(0, 0);
+        spinMotor.config_kF(0, Constants.SPINNY_KF, 0);
+        spinMotor.config_kP(0, Constants.SPINNY_KP, 0);
+        spinMotor.config_kI(0, Constants.SPINNY_KI, 0);
+        spinMotor.config_kD(0, Constants.SPINNY_KD, 0);
+        spinMotor.config_IntegralZone(0, 300);
+        spinMotor.setInverted(false);
+        spinMotor.setNeutralMode(NeutralMode.Brake);
+        spinMotor.configVoltageCompSaturation(Constants.SPINNY_VCOMP);
+        spinMotor.enableVoltageCompensation(true);
     }
 
     @Override
@@ -196,20 +221,22 @@ public class Spinny extends Subsystem {
 
     public class SpinnyIO extends PeriodicIO {
         // INPUTS
+        public String activeTargetColor = null;
 
         // TODO add color sensor input
 
         // Operator input
-        public double[] operatorInput = {0, 0, 0};
+        public boolean forwardButtonPressed = false;
+        public boolean backwardButtonPressed = false;
 
         // OUTPUTS
         // Internal counters
+        public String activeColor = null;
+        public double startTimestamp = 0.0;
 
         // Spin motor output values
-        public double spin_accl = 0.0;
         public double spin_demand = 0.0;
         public double spin_distance = 0.0;
-        public double spin_feedforward = 0.0;
     }
 
     /**
@@ -236,16 +263,16 @@ public class Spinny extends Subsystem {
             return null;
         }
         else if (distance_blue == smallestDistance) {
-            return "Blue";
+            return "B";
         }
         else if (distance_green == smallestDistance) {
-            return "Green";
+            return "G";
         }
         else if (distance_red == smallestDistance) {
-            return "Red";
+            return "R";
         }
         else {
-            return "Yellow";
+            return "Y";
         }
     }
 

@@ -75,8 +75,18 @@ public class Constants {
     public static final double PERCENT_MANUAL_FORWARD = .5;
     public static final double PERCENT_MANUAL_BACKWARD = -.5;
 
-    // Time (frames) in which to stay in state INACTIVE_ENCODING before moving to INACTIVE
-    public static final int INACTIVE_ENCODING_STATE_TIME = 300;
+    public static final double AUTO_COLOR_FORWARD_SPEED = .5;
+    public static final double AUTO_COLOR_BACKWARD_SPEED = -.5;
+
+    public static final double SPINNY_KP = 0.44; //0.44
+    public static final double SPINNY_KI = 0.0;
+    public static final double SPINNY_KD = 30.0; //30
+    public static final double SPINNY_KF = 0.50;
+
+    // Time (seconds) in which to stay in state INACTIVE_ENCODING before moving to INACTIVE
+    public static final int INACTIVE_ENCODING_STATE_TIME = 3;
+
+    public static final double SPINNY_VCOMP = 11.0; //V                11.0
 
     // Center points for color inputs
     public static final int[] BLUE_IDEAL_COLOR_READINGS = {0, 255, 255};
