@@ -25,6 +25,9 @@ import frc.lib.util.Util;
 import frc.robot.Constants;
 import frc.robot.Kinematics;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class Spinny extends Subsystem {
 
     //construct one and only 1 instance of this class
@@ -35,11 +38,14 @@ public class Spinny extends Subsystem {
     }
 
     // Spinner colors in clockwise order
-    private String[] spinnerColors = {"blue", "green", "red", "yellow"};
+    private ArrayList<String> spinnerColors = new ArrayList<String>(Arrays.asList("blue", "green", "red", "yellow"));
+    private String activeColor = null;
+    private double distanceSpun = 0.0;
 
     //used internally for data
     private SpinnyControlState mSpinnyControlState = SpinnyControlState.INACTIVE;
     private SpinnyIO periodicIO;
+    private int inactiveEncodingTimeRemaining = 0;
 
     // Hardware
     private TalonSRX spinMotor;
@@ -60,16 +66,54 @@ public class Spinny extends Subsystem {
                             periodicIO.spin_demand = 0;
                             break;
 
+                        case INACTIVE_ENCODING:
+                            updateEncoding();
+                            inactiveEncodingTimeRemaining--; // TODO change to real time using timestamp
+                            if (inactiveEncodingTimeRemaining <= 0) {
+                                mSpinnyControlState = SpinnyControlState.INACTIVE;
+                                activeColor = null;
+                            }
+
                         case AUTO_SPIN:
+                            updateEncoding();
                             //TODO
                             break;
 
                         case AUTO_COLOR:
-                            //TODO
+                            updateEncoding();
+                            if (activeColor != null && hasTargetColor) {
+
+                                // sensorColor is the color likely in the sensor given the current color we're seeing
+                                String sensorColor = spinnerColors.get((spinnerColors.indexOf(activeColor) + 2) % 4);
+
+                                String targetColor = "blue"; // todo initialize for real
+
+                                // If we're already on target
+                                if (sensorColor.equals(targetColor)) {
+                                    initInactiveEncodingState();
+                                }
+                                // If the target is counter-clockwise one step
+                                else if (spinnerColors.indexOf(sensorColor) == spinnerColors.indexOf(targetColor) - 1) {
+                                    // TODO move backward
+                                }
+                                // If the target is clockwise one or two steps
+                                else {
+                                    // TODO move forward
+                                }
+                            }
                             break;
 
                         case MANUAL:
-                            //TODO
+                            updateEncoding();
+                            if (/* forward button pressed */) {
+                                periodicIO.spin_demand = Constants.PERCENT_MANUAL_FORWARD;
+                            }
+                            else if (/* backward button pressed */) {
+                                periodicIO.spin_demand = Constants.PERCENT_MANUAL_BACKWARD;
+                            }
+                            else {
+                                initInactiveEncodingState();
+                            }
                             break;
 
                         default:
@@ -84,6 +128,25 @@ public class Spinny extends Subsystem {
 
             }
         });
+    }
+
+    private void initInactiveEncodingState() {
+        inactiveEncodingTimeRemaining = Constants.INACTIVE_ENCODING_STATE_TIME;
+        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
+    }
+
+    private void updateEncoding() {
+        rawColorData = getRawColorData;
+        String color = resolveToColor(rawColorData.red, rawColorData.green, rawColorData.blue);
+        if (color == null) {
+            activeColor = null;
+        }
+        else if (!color.equals(activeColor)) {
+            if (activeColor != null) {
+                distanceSpun += 0.125;
+            }
+            activeColor = color;
+        }
     }
 
     @Override
@@ -117,8 +180,8 @@ public class Spinny extends Subsystem {
 
     enum SpinnyControlState {
         INACTIVE,
-        MANUAL_FORWARD,
-        MANUAL_BACKWARD,
+        INACTIVE_ENCODING,
+        MANUAL,
         AUTO_SPIN,
         AUTO_COLOR;
 
@@ -170,7 +233,7 @@ public class Spinny extends Subsystem {
         int smallestDistance = Math.min(Math.min(distance_blue, distance_green), Math.min(distance_red, distance_yellow));
 
         if (smallestDistance > Constants.MAXIMUM_TOLERANCE) {
-            return "None";
+            return null;
         }
         else if (distance_blue == smallestDistance) {
             return "Blue";
