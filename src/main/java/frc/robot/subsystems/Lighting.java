@@ -33,6 +33,10 @@ public class Lighting
     {
         lightsI2c.writeBulk(new byte[]{1, (byte) (red ? 1 : 0) });
     }
+    public void writeBallCount(int c)
+    {
+        lightsI2c.writeBulk(new byte[]{1, (byte) (c) });
+    }
     public void off()
     {
         writeMode(0);
@@ -48,6 +52,14 @@ public class Lighting
     public void auto()
     {
         writeMode(3);
+    }
+    public void disBallCount()
+    {
+        writeMode(4);
+    }
+    public void setBallCount(int c)
+    {
+        writeBallCount(c)
     }
     public void gotAlliance(boolean red)
     {
