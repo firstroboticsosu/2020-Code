@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import java.sql.Time;
 import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -46,11 +47,13 @@ public class Robot extends TimedRobot {
 
         //Final cleanup after initialization
         VersionData.WriteBuildInfoToDashboard();
+        Lighting.reset();
     }
 
     @Override
     public void robotPeriodic() {
         Drive.getInstance().outputTelemetry();
+        Lighting.getInstance().determineAlliance(m_ds.getAlliance());
     }
 
     @Override
@@ -65,6 +68,7 @@ public class Robot extends TimedRobot {
 
         //start new looper
         disabledLooper.start();
+        Lighting.getInstance().disabled();
     }
 
     @Override
@@ -83,6 +87,7 @@ public class Robot extends TimedRobot {
 
         //start new looper
         enabledLooper.start();
+        Lighting.getInstance().auto();
 
         //start the state machine
         StateMachine.runMachine(new TestMach());
@@ -97,7 +102,6 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         //Stop current looper and start new looper
         disabledLooper.stop();
-        
         //reset any subsystems
         Drive.getInstance().reset();
         PoseEstimator.getInstance().reset();
@@ -107,6 +111,7 @@ public class Robot extends TimedRobot {
 
         //Start scheduler
         Scheduler.runScheduler();
+        Lighting.getInstance().enabled();
     }
 
     @Override
