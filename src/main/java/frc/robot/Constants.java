@@ -14,6 +14,7 @@ public class Constants {
     public static final int DRIVE_BACK_LEFT_ID = 3;
     public static final int DRIVE_FRONT_RIGHT_ID = 2;
     public static final int DRIVE_BACK_RIGHT_ID = 4;
+    public static final int SPINNY_ID = 5;
 
     //Pigeon ID
     public static final int PIGEON_IMU_ID = 1;
@@ -65,6 +66,22 @@ public class Constants {
     public static final double DRIVE_LEFT_KI = 0.0; 
     public static final double DRIVE_LEFT_KD = 30.0; //30
     public static final double DRIVE_LEFT_KF = 0.50;
+
+    /**
+     * Spinny Configuration --------------------------------------
+     */
+    // Percent speed at which to run for manual forward/backward
+    public static final double PERCENT_MANUAL_FORWARD = .5;
+    public static final double PERCENT_MANUAL_BACKWARD = -.5;
+
+    // Center points for color inputs
+    public static final int[] BLUE_IDEAL_COLOR_READINGS = {0, 255, 255};
+    public static final int[] GREEN_IDEAL_COLOR_READINGS = {0, 255, 0};
+    public static final int[] RED_IDEAL_COLOR_READINGS = {255, 0, 0};
+    public static final int[] YELLOW_IDEAL_COLOR_READINGS = {255, 255, 0};
+
+    // The maximum amount of deviation away from a color before it's not that color
+    public static final int MAXIMUM_TOLERANCE = 100;
 
     /**
      * General Configuration --------------------------------------

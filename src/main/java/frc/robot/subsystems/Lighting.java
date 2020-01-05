@@ -9,7 +9,6 @@ public class Lighting
     static final byte DATA_MODE = 0;
     private static Lighting lights = new Lighting();
     private static I2C lightsI2c;
-    final int TEENSYID = 9;
     static long frame = 0;
     byte currentMode = 0;
     static public int mode = 0;

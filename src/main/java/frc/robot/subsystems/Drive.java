@@ -9,20 +9,16 @@ import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.drivers.PIDF;
 import frc.lib.geometry.Pose2d;
-import frc.lib.geometry.Pose2dWithCurvature;
 import frc.lib.geometry.Rotation2d;
 import frc.lib.geometry.Translation2d;
-import frc.lib.geometry.Twist2d;
 import frc.lib.loops.ILooper;
 import frc.lib.loops.Loop;
 import frc.lib.path.AdaptivePurePursuitController;
 import frc.lib.path.Lookahead;
 import frc.lib.path.Path;
-import frc.lib.path.PathFollower;
 import frc.lib.util.DriveSignal;
 import frc.lib.util.HIDHelper;
 import frc.lib.util.Util;
@@ -205,7 +201,6 @@ public class Drive extends Subsystem {
         setHeading(Rotation2d.fromDegrees(0));
         resetEncoders();
         angleController.reset();
-
     }
 
     private void resetEncoders() {

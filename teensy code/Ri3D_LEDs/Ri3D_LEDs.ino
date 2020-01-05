@@ -6,6 +6,11 @@
 CRGB leds[NUM_LEDS];
 
 byte mode = 0;
+boolean weRed = true;
+byte toMode = 0;
+boolean readyToTrans = false;
+int transitionVal = 255;
+long modeTime = 0;
 
 void setup() { 
   delay(100);
@@ -20,37 +25,51 @@ void setup() {
   Serial.println("ready.");
 }
 
-void fadeall() { for(int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(250); } }
-
-void loop() { 
-  static uint8_t hue = 0;
-  //Serial.print("x");
-  // First slide the led in one direction
-  for(int i = 0; i < NUM_LEDS; i++) {
-    // Set the i'th led to red 
-    leds[i] = CHSV(hue++, 255, 255);
-    // Show the leds
-    FastLED.show(); 
-    // now that we've shown the leds, reset the i'th led to black
-    // leds[i] = CRGB::Black;
-    fadeall();
-    // Wait a little bit before we loop around and do it again
-    delay(10);
+void loop() 
+{ 
+  toMode = (millis()/50000)%2;
+  if(readyToTrans && mode!=toMode)
+  {
+    mode = toMode;
+    modeTime = millis();
   }
-  //Serial.print("x");
-
-  // Now go in the other direction.  
-  for(int i = (NUM_LEDS)-1; i >= 0; i--) {
-    // Set the i'th led to red 
-    leds[i] = CHSV(hue++, 255, 255);
-    // Show the leds
-    FastLED.show();
-    // now that we've shown the leds, reset the i'th led to black
-    // leds[i] = CRGB::Black;
-    fadeall();
-    // Wait a little bit before we loop around and do it again
-    delay(10);
+  if(mode == 0)
+  {
+    byte val = (byte)((sin((millis()-modeTime)/1000.0+PI*3/2)+1)/2*255);
+    readyToTrans = val == 0;
+    for(int i = 0; i < NUM_LEDS; i++) {
+      // Set the i'th led to red 
+      leds[i] = CHSV(0,0,val);
+      // Show the leds
+    }
   }
+  else if(mode == 1)
+  {
+    if(toMode==1)
+    {
+      transitionVal = (millis()-modeTime)/1000.0*255;
+      if(transitionVal>255)
+      {
+        transitionVal = 255;
+      }
+    }
+    else
+    {
+      transitionVal -= 3;
+      transitionVal = max(transitionVal, 0);
+    }
+    Serial.println(transitionVal);
+    CHSV c = CHSV((millis()/100)%255, 255, transitionVal);
+    for(int i = 0; i < NUM_LEDS; i++) {
+      // Set the i'th led to red 
+      leds[i] = c;
+      // Show the leds
+    }
+    readyToTrans = transitionVal==0;
+  }
+  //Serial.println(toMode+":"+mode);
+  FastLED.show(); 
+  delay(10);
 }
 void receiveEvent(int howMany)
 {
@@ -62,10 +81,22 @@ void receiveEvent(int howMany)
     if(Wire.available()>0)
     {
       b = Wire.read();
+      if(i==0 && b==18)
+      {
+        b = Wire.read();
+      }
     }
     bytes[i] = b;
     Serial.print(b);
     Serial.print(":");
+  }
+  if(bytes[0] == 0)
+  {
+    mode = bytes[1];
+  }
+  if(bytes[0] == 1)
+  {
+    weRed = bytes[1]==true;
   }
   Serial.println();
   digitalWrite(LED_BUILTIN, LOW);
