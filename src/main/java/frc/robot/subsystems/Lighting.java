@@ -60,7 +60,7 @@ public class Lighting
     }
     public void setBallCount(int c)
     {
-        writeBallCount(c)
+        writeBallCount(c);
     }
     public void gotAlliance(boolean red)
     {
