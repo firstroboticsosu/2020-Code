@@ -36,7 +36,7 @@ public class Lighting
     }
     public void writeBallCount(int c)
     {
-        lightsI2c.writeBulk(new byte[]{1, (byte) (c) });
+        lightsI2c.writeBulk(new byte[]{2, (byte) (c) });
     }
     public void off()
     {
