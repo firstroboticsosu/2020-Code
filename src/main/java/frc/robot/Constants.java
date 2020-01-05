@@ -70,9 +70,13 @@ public class Constants {
     /**
      * Spinny Configuration --------------------------------------
      */
+    // Forward is clockwise, backwards is counter-clockwise
     // Percent speed at which to run for manual forward/backward
     public static final double PERCENT_MANUAL_FORWARD = .5;
     public static final double PERCENT_MANUAL_BACKWARD = -.5;
+
+    // Time (frames) in which to stay in state INACTIVE_ENCODING before moving to INACTIVE
+    public static final int INACTIVE_ENCODING_STATE_TIME = 300;
 
     // Center points for color inputs
     public static final int[] BLUE_IDEAL_COLOR_READINGS = {0, 255, 255};

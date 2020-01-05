@@ -110,7 +110,7 @@ public class Robot extends TimedRobot {
 
         //Start scheduler
         Scheduler.runScheduler();
-        Lighting.getInstance().enabled();
+        Lighting.getInstance().telop();
     }
 
     @Override

@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.I2C.Port;
 
-public class Lighting 
+public class Lighting
 {
     static final byte DATA_MODE = 0;
     private static Lighting lights = new Lighting();
@@ -13,6 +13,7 @@ public class Lighting
     byte currentMode = 0;
     static public int mode = 0;
     Alliance knownAlliance = Alliance.Invalid;
+
     static public Lighting getInstance()
     {
         return lights;
@@ -37,7 +38,7 @@ public class Lighting
     {
         writeMode(0);
     }
-    public void enabled()
+    public void telop()
     {
         writeMode(2);
     }
