@@ -116,10 +116,10 @@ public class Ramp extends Subsystem {
 
     @Override
     public synchronized void writePeriodicOutputs() {
-        rampMotor.set(ControlMode.PercentOutput, periodicIO.ramp_demand);
-        flapPiston.set(DoubleSolenoid.Value.kForward);
-        collectorPiston.set(DoubleSolenoid.Value.kForward);
-        // TODO Add piston to this
+        upperRampMotor.set(ControlMode.PercentOutput, periodicIO.upper_ramp_demand);
+        lowerRampMotor.set(periodicIO.lower_ramp_demand)
+        flapPiston.set(periodicIO.flap_closed ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
+        collectorPiston.set(periodicIO.collector_down ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
     }
 
     private Ramp() {
@@ -215,10 +215,18 @@ public class Ramp extends Subsystem {
 
         // OUTPUTS
         // Set desired output values
-        public double ramp_demand = 0.0;
-        public double collector_demand = 0.0;
-        public double flap_piston_distance = 0.0;
-        public double collector_piston_distance = 0.0;
+        public double lower_ramp_demand = 0.0;
+        public double upper_ramp_demand = 0.0;
+        public boolean flap_closed = true;
+        public boolean collector_down = false;
+    }
+
+    public void setSpinning(boolean spinning) {
+        periodicIO.lower_ramp_demand = spinning ? Constants.LOW
+    }
+
+    public void setDoor(boolean wantClosed) {
+        periodicIO.flap_closed = wantClosed;
     }
 
 }

@@ -118,6 +118,9 @@ public class Constants {
     public static final double UPPER_RAMP_UP_SPEED = .7;
     public static final double UPPER_RAMP_DOWN_SPEED = -.7;
 
+    public static final double LOWER_RAMP_UP_SPEED = .7;
+    public static final double LOWER_RAMP_DOWN_SPEED = -.7;
+
     public static final double FLAP_PISTON_UP_VALUE = 1;
     public static final double FLAP_PISTON_DOWN_VALUE = 0;
 
