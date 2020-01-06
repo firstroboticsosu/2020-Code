@@ -47,57 +47,6 @@ public class Ramp extends Subsystem {
             public void onLoop(double timestamp) {
                 synchronized (Ramp.this) {
 
-                    switch (mRampControlState) {
-
-                        case INACTIVE:
-                            periodicIO.ramp_demand = 0;
-                            break;
-
-                        case UP:
-                            periodicIO.ramp_demand = Constants.RAMP_UP_SPEED;
-
-                        case DOWN:
-                            periodicIO.ramp_demand = Constants.RAMP_DOWN_SPEED;
-                            break;
-
-                        default:
-                            System.out.println("Unexpected control state for input motor");
-                    }
-
-                    switch (mOutputControlState) {
-
-                        case INACTIVE:
-                            break;
-
-                        case UP:
-                            periodicIO.flap_piston_distance = Constants.FLAP_PISTON_UP_VALUE;
-                            break;
-
-                        case DOWN:
-                            periodicIO.flap_piston_distance = Constants.FLAP_PISTON_DOWN_VALUE;
-                            break;
-
-                        default:
-                            System.out.println("Unexpected control state for plate controller");
-
-                    }
-
-                    switch (mCollectorControlState) {
-
-                        case INACTIVE:
-                            periodicIO.ramp_demand = 0;
-                            break;
-
-                        case UP:
-                            periodicIO.collector_piston_distance = Constants.COLLECTOR_PISTON_UP_VALUE;
-
-                        case DOWN:
-                            periodicIO.collector_piston_distance = Constants.COLLECTOR_PISTON_DOWN_VALUE;
-                            break;
-
-                        default:
-                            System.out.println("Unexpected control state for input motor");
-                    }
 
                 }
             }
@@ -117,7 +66,7 @@ public class Ramp extends Subsystem {
     @Override
     public synchronized void writePeriodicOutputs() {
         upperRampMotor.set(ControlMode.PercentOutput, periodicIO.upper_ramp_demand);
-        lowerRampMotor.set(periodicIO.lower_ramp_demand)
+        lowerRampMotor.set(periodicIO.lower_ramp_demand);
         flapPiston.set(periodicIO.flap_closed ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
         collectorPiston.set(periodicIO.collector_down ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
     }
@@ -154,10 +103,6 @@ public class Ramp extends Subsystem {
         upperRampMotor.setNeutralMode(NeutralMode.Brake);
         upperRampMotor.configVoltageCompSaturation(Constants.RAMP_VCOMP);
         upperRampMotor.enableVoltageCompensation(true);
-    }
-
-    public void setRampSpeed(double upper, double lower){
-        periodicIO.ramp_demand = upper;
     }
 
     @Override
@@ -221,8 +166,21 @@ public class Ramp extends Subsystem {
         public boolean collector_down = false;
     }
 
-    public void setSpinning(boolean spinning) {
-        periodicIO.lower_ramp_demand = spinning ? Constants.LOW
+    public void spinUp() {
+        periodicIO.lower_ramp_demand = Constants.LOWER_RAMP_UP_SPEED;
+        periodicIO.upper_ramp_demand = Constants.UPPER_RAMP_UP_SPEED;
+    }
+    public void spinDown() {
+        periodicIO.lower_ramp_demand = Constants.LOWER_RAMP_DOWN_SPEED;
+        periodicIO.upper_ramp_demand = Constants.UPPER_RAMP_DOWN_SPEED;
+    }
+    public void stopSpinning() {
+        periodicIO.lower_ramp_demand = 0;
+        periodicIO.upper_ramp_demand = 0;
+    }
+
+    public void setCollector(boolean wantDown) {
+        periodicIO.collector_down = wantDown;
     }
 
     public void setDoor(boolean wantClosed) {
