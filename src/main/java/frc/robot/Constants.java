@@ -16,6 +16,13 @@ public class Constants {
     public static final int DRIVE_BACK_RIGHT_ID = 4;
     public static final int SPINNY_ID = 5;
     public static final int RAMP_ID = 6;
+    public static final int COLLECTOR_ID = 7;
+
+    //solenoid assignments
+    public static final int FLAP_PISTON_FORWARD_ID = 0; //TODO pick these
+    public static final int FLAP_PISTON_REVERSE_ID = 0;
+    public static final int COLLECTOR_FORWARD_ID = 0;
+	public static final int COLLECTOR_REVERSE_ID = 0;
 
     //Pigeon ID
     public static final int PIGEON_IMU_ID = 1;

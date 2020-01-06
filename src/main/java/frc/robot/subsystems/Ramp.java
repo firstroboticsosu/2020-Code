@@ -5,6 +5,10 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,7 +33,7 @@ public class Ramp extends Subsystem {
 
     // Hardware
     private TalonSRX upperRampMotor;
-    private lowerRampMotor;
+    private CANSparkMax lowerRampMotor;
     private DoubleSolenoid flapPiston;
     private DoubleSolenoid collectorPiston;
 
@@ -114,14 +118,15 @@ public class Ramp extends Subsystem {
     public synchronized void writePeriodicOutputs() {
         rampMotor.set(ControlMode.PercentOutput, periodicIO.ramp_demand);
         flapPiston.set(DoubleSolenoid.Value.kForward);
+        collectorPiston.set(DoubleSolenoid.Value.kForward);
         // TODO Add piston to this
     }
 
     private Ramp() {
-        lowerRampMotor = new //neo
+        lowerRampMotor = new CANSparkMax(Constants.COLLECTOR_ID, MotorType.kBrushless);
         upperRampMotor = new TalonSRX(Constants.RAMP_ID);
-        flapPiston = new DoubleSolenoid(Constants.FLAP_PISTON_FORWARD, Constants.FLAP_PISTON_REVERSE);
-        collectorPiston = new DoubleSolenoid(Constants.COLLECTOR_FORWARD, Constants.COLLECTOR_REVERSE);
+        flapPiston = new DoubleSolenoid(Constants.FLAP_PISTON_FORWARD_ID, Constants.FLAP_PISTON_REVERSE_ID);
+        collectorPiston = new DoubleSolenoid(Constants.COLLECTOR_FORWARD_ID, Constants.COLLECTOR_REVERSE_ID);
         configTalons();
         reset();
     }
@@ -149,6 +154,10 @@ public class Ramp extends Subsystem {
         upperRampMotor.setNeutralMode(NeutralMode.Brake);
         upperRampMotor.configVoltageCompSaturation(Constants.RAMP_VCOMP);
         upperRampMotor.enableVoltageCompensation(true);
+    }
+
+    public void setRampSpeed(double upper, double lower){
+        periodicIO.ramp_demand = upper;
     }
 
     @Override
@@ -207,6 +216,7 @@ public class Ramp extends Subsystem {
         // OUTPUTS
         // Set desired output values
         public double ramp_demand = 0.0;
+        public double collector_demand = 0.0;
         public double flap_piston_distance = 0.0;
         public double collector_piston_distance = 0.0;
     }

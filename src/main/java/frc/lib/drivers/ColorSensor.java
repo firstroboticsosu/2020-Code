@@ -79,7 +79,7 @@ public class ColorSensor{
         if(read_data.length > 1){
             out[1] = (read_data[1] << 8 | read_data[0]) / (double)0xffff;
         }
-        colorI2c.read(GDATAL, 2, read_data);
+        colorI2c.read(BDATAL, 2, read_data);
         if(read_data.length > 1){
             out[2] = (read_data[1] << 8 | read_data[0]) / (double)0xffff;
         }
