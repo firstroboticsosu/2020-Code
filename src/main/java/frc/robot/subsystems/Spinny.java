@@ -5,12 +5,16 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.drivers.ColorSensor;
 import frc.lib.loops.ILooper;
 import frc.lib.loops.Loop;
+import frc.lib.motion.MotionProfileConstraints;
+import frc.lib.motion.SetpointGenerator;
 import frc.robot.Constants;
 
 import java.util.ArrayList;
@@ -31,10 +35,13 @@ public class Spinny extends Subsystem {
     //used internally for data
     private SpinnyControlState mSpinnyControlState = SpinnyControlState.INACTIVE;
     private SpinnyIO periodicIO;
+    private SetpointGenerator setpointGenerator;
+    private MotionProfileConstraints motionConstraints;
 
     // Hardware
     private TalonSRX spinMotor;
     private ColorSensor colorSensor;
+    private DoubleSolenoid deployPistonSolenoid;
 
     public void registerEnabledLoops(ILooper enabledLooper) {
         enabledLooper.register(new Loop() {
@@ -62,47 +69,16 @@ public class Spinny extends Subsystem {
 
                         case AUTO_SPIN:
                             updateEncoding();
-                            if (periodicIO.autoSpinPressed) {
-                                //TODO
-                            }
-                            else {
-                                initInactiveEncodingState();
-                            }
+                            updateAutoSpin(timestamp);
                             break;
 
                         case AUTO_COLOR:
                             updateEncoding();
-                            if (periodicIO.activeTargetColor != null && periodicIO.autoColorPressed) {
-
-                                // If we're already on target
-                                if (periodicIO.activeColor.equals(periodicIO.activeTargetColor)) {
-                                    initInactiveEncodingState();
-                                }
-                                // If the target is counter-clockwise one step
-                                else if (spinnerColors.indexOf(periodicIO.activeColor) == spinnerColors.indexOf(periodicIO.activeTargetColor) - 1) {
-                                    periodicIO.spin_demand = Constants.AUTO_COLOR_BACKWARD_SPEED;
-                                }
-                                // If the target is clockwise one or two steps
-                                else {
-                                    periodicIO.spin_demand = Constants.AUTO_COLOR_FORWARD_SPEED;
-                                }
-                            }
-                            else {
-                                initInactiveEncodingState();
-                            }
+                            updateAutoColor(timestamp);
                             break;
 
                         case MANUAL:
                             updateEncoding();
-                            if (periodicIO.forwardButtonPressed) {
-                                periodicIO.spin_demand = Constants.PERCENT_MANUAL_FORWARD;
-                            }
-                            else if (periodicIO.backwardButtonPressed) {
-                                periodicIO.spin_demand = Constants.PERCENT_MANUAL_BACKWARD;
-                            }
-                            else {  // If no buttons are being pressed move us out of manual mode
-                                initInactiveEncodingState();
-                            }
                             break;
 
                         default:
@@ -118,6 +94,7 @@ public class Spinny extends Subsystem {
             }
         });
     }
+
 
     private void initInactiveEncodingState() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
@@ -135,6 +112,37 @@ public class Spinny extends Subsystem {
         }
     }
 
+    @Override
+    public synchronized void readPeriodicInputs() {
+        periodicIO.sensedColors = colorSensor.getColor();
+    }
+
+    @Override
+    public synchronized void writePeriodicOutputs() {
+        spinMotor.set(ControlMode.PercentOutput, periodicIO.spin_demand);
+        deployPistonSolenoid.set(periodicIO.deployColor ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
+    }
+
+    private Spinny() {
+        spinMotor = new TalonSRX(Constants.SPINNY_ID);
+        deployPistonSolenoid = new DoubleSolenoid(Constants.COLOR_IN_ID, Constants.COLOR_OUT_ID);
+        colorSensor = new ColorSensor();
+        configTalons();
+        reset();
+
+    }
+
+    public void reset() {
+        periodicIO = new Spinny.SpinnyIO();
+        resetSensors();
+        abort();
+    }
+
+    public void resetSensors(){
+        colorSensor.reset();
+        spinMotor.setSelectedSensorPosition(0, 0, 0);
+    }
+
     public void initAutoColor() {
         String targetColor = DriverStation.getInstance().getGameSpecificMessage();
         if (!spinnerColors.contains(targetColor))
@@ -143,34 +151,52 @@ public class Spinny extends Subsystem {
         mSpinnyControlState = SpinnyControlState.AUTO_COLOR;
     }
 
+    private void updateAutoColor(double timestamp) {
+        
+    }
+
+    public void initAutoSpin(){
+        //TODO create motion profiler and target goal
+        mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
+
+    }
+
+    private void updateAutoSpin(double timestamp){
+        if (periodicIO.activeTargetColor != null) {
+
+            // If we're already on target
+            if (periodicIO.activeColor.equals(periodicIO.activeTargetColor)) {
+                periodicIO.activeTargetColor = null;
+                initInactiveEncodingState();
+            }
+            // If the target is counter-clockwise one step
+            else if (spinnerColors.indexOf(periodicIO.activeColor) == spinnerColors.indexOf(periodicIO.activeTargetColor) - 1) {
+                periodicIO.spin_demand = Constants.AUTO_COLOR_BACKWARD_SPEED;
+            }
+            // If the target is clockwise one or two steps
+            else {
+                periodicIO.spin_demand = Constants.AUTO_COLOR_FORWARD_SPEED;
+            }
+        }
+    }
+
+    public void updateManualSpin(double speed){
+        if(mSpinnyControlState != SpinnyControlState.MANUAL){
+            spinMotor.set(ControlMode.PercentOutput, 0);
+            mSpinnyControlState = SpinnyControlState.MANUAL;
+        }
+        periodicIO.spin_demand = speed;
+    }
+
+    public void deactivate(){
+        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
+        periodicIO.spin_demand = 0;
+    }
+
     public void abort() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
         periodicIO.startTimestamp = Timer.getFPGATimestamp();
 
-    }
-
-    @Override
-    public synchronized void readPeriodicInputs() {
-        periodicIO.sensedColors = colorSensor.getColor();
-        //TODO read in button info. If a button is pressed move to manual mode
-    }
-
-    @Override
-    public synchronized void writePeriodicOutputs() {
-        spinMotor.set(ControlMode.PercentOutput, periodicIO.spin_demand);
-    }
-
-    private Spinny() {
-        spinMotor = new TalonSRX(Constants.SPINNY_ID);
-        configTalons();
-        reset();
-
-    }
-
-    public void reset() {
-        periodicIO = new Spinny.SpinnyIO();
-        colorSensor.reset();
-        abort();
     }
 
     private void configTalons() {
@@ -222,13 +248,6 @@ public class Spinny extends Subsystem {
         public String activeTargetColor = null; // The color we need to see to have the correct color showing on the sensor
         public double[] sensedColors = {0, 0, 0}; // The input we get from the sensor
 
-        // Operator input
-        public boolean forwardButtonPressed = false; // Whether the forward button is pressed or not
-        public boolean backwardButtonPressed = false; // Whether the backward button is pressed or not
-
-        public boolean autoSpinPressed = false;
-        public boolean autoColorPressed = false;
-
         // OUTPUTS
         // Internal counters
         public String activeColor = null; // What the color we're seeing right now is, null for unknown
@@ -237,6 +256,7 @@ public class Spinny extends Subsystem {
 
         // Spin motor output values
         public double spin_demand = 0.0; // The outgoing request for spin speed
+        public boolean deployColor = false;
     }
 
     /**
@@ -285,7 +305,7 @@ public class Spinny extends Subsystem {
     }
 
     private static double rotationsToInches(double rotations) {
-        return rotations * Math.PI * Constants.DRIVE_WHEEL_DIAMETER_INCHES;
+        return rotations * Math.PI * Constants.SPINNY_WHEEL_DIAMETER;
     }
 
     private static double rpmToInchesPerSecond(double rpm) {
@@ -305,7 +325,7 @@ public class Spinny extends Subsystem {
     }
 
     private static double inchesPerSecondToRadiansPerSecond(double in_sec) {
-        return in_sec / (Constants.DRIVE_WHEEL_DIAMETER_INCHES * Math.PI) * 2 * Math.PI;
+        return in_sec / (Constants.SPINNY_WHEEL_DIAMETER * Math.PI) * 2 * Math.PI;
     }
 
     private static double rpmToTicksPer100ms(double rpm) {

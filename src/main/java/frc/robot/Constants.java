@@ -22,7 +22,9 @@ public class Constants {
     public static final int FLAP_PISTON_FORWARD_ID = 0; //TODO pick these
     public static final int FLAP_PISTON_REVERSE_ID = 0;
     public static final int COLLECTOR_FORWARD_ID = 0;
-	public static final int COLLECTOR_REVERSE_ID = 0;
+    public static final int COLLECTOR_REVERSE_ID = 0;
+    public static final int COLOR_OUT_ID = 0;
+    public static final int COLOR_IN_ID = 0;
 
     //Pigeon ID
     public static final int PIGEON_IMU_ID = 1;
@@ -80,8 +82,9 @@ public class Constants {
      */
     // Forward is clockwise, backwards is counter-clockwise
     // Percent speed at which to run for manual forward/backward
-    public static final double PERCENT_MANUAL_FORWARD = .5;
-    public static final double PERCENT_MANUAL_BACKWARD = -.5;
+    public static final double SPINNY_WHEEL_DIAMETER = 3.0; //in
+    public static final double SPINNY_PERCENT_FORWARD = .5;
+    public static final double SPINNY_PERCENT_BACKWARD = -.5;
 
     public static final double AUTO_COLOR_FORWARD_SPEED = .5;
     public static final double AUTO_COLOR_BACKWARD_SPEED = -.5;
