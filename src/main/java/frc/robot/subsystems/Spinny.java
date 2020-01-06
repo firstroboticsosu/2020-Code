@@ -276,6 +276,14 @@ public class Spinny extends Subsystem {
         }
     }
 
+    private static double compliantRotationToWheelRotation(double rotations) {
+        return rotations * 32 / 3;
+    }
+
+    private static double wheelRotationToCompliantRotation(double rotations) {
+        return rotations * 3 / 32;
+    }
+
     private static double rotationsToInches(double rotations) {
         return rotations * Math.PI * Constants.DRIVE_WHEEL_DIAMETER_INCHES;
     }

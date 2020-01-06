@@ -15,6 +15,7 @@ public class Constants {
     public static final int DRIVE_FRONT_RIGHT_ID = 2;
     public static final int DRIVE_BACK_RIGHT_ID = 4;
     public static final int SPINNY_ID = 5;
+    public static final int RAMP_ID = 6;
 
     //Pigeon ID
     public static final int PIGEON_IMU_ID = 1;
@@ -96,6 +97,25 @@ public class Constants {
 
     // The maximum amount of deviation away from a color before it's not that color
     public static final int MAXIMUM_TOLERANCE = 100;
+
+    /**
+     * Ramp Configuration --------------------------------------
+     */
+    public static final double RAMP_VCOMP = 11.0; //V                11.0
+
+    public static final double RAMP_KP = 0.44; //0.44
+    public static final double RAMP_KI = 0.0;
+    public static final double RAMP_KD = 30.0; //30
+    public static final double RAMP_KF = 0.50;
+
+    public static final double RAMP_UP_SPEED = .7;
+    public static final double RAMP_DOWN_SPEED = -.7;
+
+    public static final double FLAP_PISTON_UP_VALUE = 1;
+    public static final double FLAP_PISTON_DOWN_VALUE = 0;
+
+    public static final double COLLECTOR_PISTON_UP_VALUE = 1;
+    public static final double COLLECTOR_PISTON_DOWN_VALUE = 0;
 
     /**
      * General Configuration --------------------------------------
