@@ -11,6 +11,7 @@ import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.lib.drivers.ColorSensor;
 import frc.lib.drivers.PIDF;
 import frc.lib.geometry.Pose2d;
 import frc.lib.geometry.Rotation2d;
@@ -75,12 +76,17 @@ public class Spinny extends Subsystem {
 
                         case AUTO_SPIN:
                             updateEncoding();
-                            //TODO
+                            if (periodicIO.autoSpinPressed) {
+                                //TODO
+                            }
+                            else {
+                                initInactiveEncodingState();
+                            }
                             break;
 
                         case AUTO_COLOR:
                             updateEncoding();
-                            if (periodicIO.activeTargetColor != null) {
+                            if (periodicIO.activeTargetColor != null && periodicIO.autoColorPressed) {
 
                                 // If we're already on target
                                 if (periodicIO.activeColor.equals(periodicIO.activeTargetColor)) {
@@ -95,6 +101,9 @@ public class Spinny extends Subsystem {
                                     periodicIO.spin_demand = Constants.AUTO_COLOR_FORWARD_SPEED;
                                 }
                             }
+                            else {
+                                initInactiveEncodingState();
+                            }
                             break;
 
                         case MANUAL:
@@ -105,7 +114,7 @@ public class Spinny extends Subsystem {
                             else if (periodicIO.backwardButtonPressed) {
                                 periodicIO.spin_demand = Constants.PERCENT_MANUAL_BACKWARD;
                             }
-                            else {
+                            else {  // If no buttons are being pressed move us out of manual mode
                                 initInactiveEncodingState();
                             }
                             break;
@@ -129,8 +138,9 @@ public class Spinny extends Subsystem {
     }
 
     private void updateEncoding() {
-        rawColorData = getRawColorData;
-        String color = resolveToColor(rawColorData.red, rawColorData.green, rawColorData.blue);
+        double[] rawColorData = periodicIO.sensedColors;
+        int[] colorData = {(int) (255*rawColorData[0]), (int) (255*rawColorData[1]), (int) (255*rawColorData[2])};
+        String color = resolveToColor(colorData);
         if (color != null && !color.equals(periodicIO.activeColor)) {
             if (periodicIO.activeColor != null) {
                 periodicIO.spin_distance += 0.125;
@@ -155,7 +165,8 @@ public class Spinny extends Subsystem {
 
     @Override
     public synchronized void readPeriodicInputs() {
-        //TODO read in button info and color sensor data
+        periodicIO.sensedColors = colorSensor.getColor();
+        //TODO read in button info. If a button is pressed move to manual mode
     }
 
     @Override
@@ -172,6 +183,7 @@ public class Spinny extends Subsystem {
 
     public void reset() {
         periodicIO = new Spinny.SpinnyIO();
+        colorSensor.reset();
         abort();
     }
 
@@ -221,41 +233,43 @@ public class Spinny extends Subsystem {
 
     public class SpinnyIO extends PeriodicIO {
         // INPUTS
-        public String activeTargetColor = null;
-
-        // TODO add color sensor input
+        public String activeTargetColor = null; // The color we need to see to have the correct color showing on the sensor
+        public double[] sensedColors = {0, 0, 0}; // The input we get from the sensor
 
         // Operator input
-        public boolean forwardButtonPressed = false;
-        public boolean backwardButtonPressed = false;
+        public boolean forwardButtonPressed = false; // Whether the forward button is pressed or not
+        public boolean backwardButtonPressed = false; // Whether the backward button is pressed or not
+
+        public boolean autoSpinPressed = false;
+        public boolean autoColorPressed = false;
 
         // OUTPUTS
         // Internal counters
-        public String activeColor = null;
-        public double startTimestamp = 0.0;
+        public String activeColor = null; // What the color we're seeing right now is, null for unknown
+        public double startTimestamp = 0.0; // The time at which we disengaged an active mode, used to disable vision encoding after time
+        public double spin_distance = 0.0; // How much we've spun the wheel recently
 
         // Spin motor output values
-        public double spin_demand = 0.0;
-        public double spin_distance = 0.0;
+        public double spin_demand = 0.0; // The outgoing request for spin speed
     }
 
     /**
      * internal methods beyond this point
      **/
 
-    private static int compute_distance(int[] target, int red, int green, int blue) {
-        int distance_r = Math.abs(target[0] - red);
-        int distance_g = Math.abs(target[1] - green);
-        int distance_b = Math.abs(target[2] - blue);
+    private static int compute_distance(int[] target, int[] colors) {
+        int distance_r = Math.abs(target[0] - colors[0]);
+        int distance_g = Math.abs(target[1] - colors[1]);
+        int distance_b = Math.abs(target[2] - colors[2]);
 
         return distance_r + distance_g + distance_b;
     }
 
-    private static String resolveToColor(int red, int blue, int green) {
-        int distance_blue = compute_distance(Constants.BLUE_IDEAL_COLOR_READINGS, red, green, blue);
-        int distance_green = compute_distance(Constants.GREEN_IDEAL_COLOR_READINGS, red, green, blue);
-        int distance_red = compute_distance(Constants.RED_IDEAL_COLOR_READINGS, red, green, blue);
-        int distance_yellow = compute_distance(Constants.YELLOW_IDEAL_COLOR_READINGS, red, green, blue);
+    private static String resolveToColor(int[] colors) {
+        int distance_blue = compute_distance(Constants.BLUE_IDEAL_COLOR_READINGS, colors);
+        int distance_green = compute_distance(Constants.GREEN_IDEAL_COLOR_READINGS, colors);
+        int distance_red = compute_distance(Constants.RED_IDEAL_COLOR_READINGS, colors);
+        int distance_yellow = compute_distance(Constants.YELLOW_IDEAL_COLOR_READINGS, colors);
 
         int smallestDistance = Math.min(Math.min(distance_blue, distance_green), Math.min(distance_red, distance_yellow));
 

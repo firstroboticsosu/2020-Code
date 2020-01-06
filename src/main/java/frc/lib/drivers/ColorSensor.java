@@ -73,15 +73,15 @@ public class ColorSensor{
         double[] out = new double[3];
         colorI2c.read(RDATAL, 2, read_data);
         if(read_data.length > 1){
-            out[0] = (read_data[0] << 8 | read_data[1]) / (double)0xff;
+            out[0] = (read_data[1] << 8 | read_data[0]) / (double)0xffff;
         }
         colorI2c.read(GDATAL, 2, read_data);
         if(read_data.length > 1){
-            out[1] = (read_data[0] << 8 | read_data[1]) / (double)0xff;
+            out[1] = (read_data[1] << 8 | read_data[0]) / (double)0xffff;
         }
         colorI2c.read(GDATAL, 2, read_data);
         if(read_data.length > 1){
-            out[2] = (read_data[0] << 8 | read_data[1]) / (double)0xff;
+            out[2] = (read_data[1] << 8 | read_data[0]) / (double)0xffff;
         }
         return out;
     }

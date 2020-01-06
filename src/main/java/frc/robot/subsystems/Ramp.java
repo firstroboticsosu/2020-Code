@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.loops.ILooper;
@@ -27,9 +28,10 @@ public class Ramp extends Subsystem {
     private RampIO periodicIO;
 
     // Hardware
-    private TalonSRX rampMotor;
-    private Piston flapPiston;
-    private Piston collectorPiston;
+    private TalonSRX upperRampMotor;
+    private lowerRampMotor;
+    private DoubleSolenoid flapPiston;
+    private DoubleSolenoid collectorPiston;
 
     public void registerEnabledLoops(ILooper enabledLooper) {
         enabledLooper.register(new Loop() {
@@ -111,39 +113,42 @@ public class Ramp extends Subsystem {
     @Override
     public synchronized void writePeriodicOutputs() {
         rampMotor.set(ControlMode.PercentOutput, periodicIO.ramp_demand);
+        flapPiston.set(DoubleSolenoid.Value.kForward);
         // TODO Add piston to this
     }
 
     private Ramp() {
-        rampMotor = new TalonSRX(Constants.RAMP_ID);
-        flapPiston = new ; // TODO
-        collectorPiston = new ; // TODO
+        lowerRampMotor = new //neo
+        upperRampMotor = new TalonSRX(Constants.RAMP_ID);
+        flapPiston = new DoubleSolenoid(Constants.FLAP_PISTON_FORWARD, Constants.FLAP_PISTON_REVERSE);
+        collectorPiston = new DoubleSolenoid(Constants.COLLECTOR_FORWARD, Constants.COLLECTOR_REVERSE);
         configTalons();
         reset();
     }
 
     public void reset() {
         periodicIO = new Ramp.RampIO();
-
+        flapPiston.set(DoubleSolenoid.Value.kOff);
+        collectorPiston.set(DoubleSolenoid.Value.kOff);
     }
 
     private void configTalons() {
         ErrorCode sensorPresent;
-        sensorPresent = rampMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 100); //primary closed-loop, 100 ms timeout
+        sensorPresent = upperRampMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 100); //primary closed-loop, 100 ms timeout
         if (sensorPresent != ErrorCode.OK) {
             DriverStation.reportError("Could not detect left encoder: " + sensorPresent, false);
         }
-        rampMotor.setSensorPhase(true);
-        rampMotor.selectProfileSlot(0, 0);
-        rampMotor.config_kF(0, Constants.RAMP_KF, 0);
-        rampMotor.config_kP(0, Constants.RAMP_KP, 0);
-        rampMotor.config_kI(0, Constants.RAMP_KI, 0);
-        rampMotor.config_kD(0, Constants.RAMP_KD, 0);
-        rampMotor.config_IntegralZone(0, 300);
-        rampMotor.setInverted(false);
-        rampMotor.setNeutralMode(NeutralMode.Brake);
-        rampMotor.configVoltageCompSaturation(Constants.RAMP_VCOMP);
-        rampMotor.enableVoltageCompensation(true);
+        upperRampMotor.setSensorPhase(true);
+        upperRampMotor.selectProfileSlot(0, 0);
+        upperRampMotor.config_kF(0, Constants.UPPER_RAMP_KF, 0);
+        upperRampMotor.config_kP(0, Constants.UPPER_RAMP_KP, 0);
+        upperRampMotor.config_kI(0, Constants.UPPER_RAMP_KI, 0);
+        upperRampMotor.config_kD(0, Constants.UPPER_RAMP_KD, 0);
+        upperRampMotor.config_IntegralZone(0, 300);
+        upperRampMotor.setInverted(false);
+        upperRampMotor.setNeutralMode(NeutralMode.Brake);
+        upperRampMotor.configVoltageCompSaturation(Constants.RAMP_VCOMP);
+        upperRampMotor.enableVoltageCompensation(true);
     }
 
     @Override
