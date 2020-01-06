@@ -10,11 +10,13 @@ package frc.robot;
 import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.buttons.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.*;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.loops.Looper;
+import frc.lib.statemachine.Action;
 import frc.lib.statemachine.StateMachine;
 import frc.lib.util.VersionData;
+import frc.robot.actions.spinny.ManualSpin;
 import frc.robot.statemachines.TestMach;
 import frc.robot.subsystems.*;
 
@@ -24,6 +26,9 @@ import frc.robot.subsystems.*;
  * update the build.gradle file in the project.
  */
 public class Robot extends TimedRobot {
+
+    JoystickButton spinLeft, spinRight, openDoor, closeDoor,
+     deployRoller, RetractRoller, deployColor, retractColor, intake;
 
     SubsystemManager manager;
     Looper enabledLooper;
@@ -135,24 +140,26 @@ public class Robot extends TimedRobot {
 
     }
 
+    //TODO make these global? seems to be yes
     public void initButtons(){
-        JoystickButton spinLeft = new JoystickButton(Constants.MASTER, 1);
+        spinLeft = new JoystickButton(Constants.MASTER, 1);
+        spinLeft.whileHeld(Action.toCommand2(new ManualSpin(0.5)));
 
-        JoystickButton spinRight = new JoystickButton(Constants.MASTER, 2);
+        spinRight = new JoystickButton(Constants.MASTER, 2);
 
-        JoystickButton openDoor = new JoystickButton(Constants.MASTER, 3);
+        openDoor = new JoystickButton(Constants.MASTER, 3);
 
-        JoystickButton CloseDoor = new JoystickButton(Constants.MASTER, 4);
+        closeDoor = new JoystickButton(Constants.MASTER, 4);
 
-        JoystickButton deployRoller = new JoystickButton(Constants.MASTER, 5);
+        deployRoller = new JoystickButton(Constants.MASTER, 5);
 
-        JoystickButton RetractRoller = new JoystickButton(Constants.MASTER, 6);
+        RetractRoller = new JoystickButton(Constants.MASTER, 6);
 
-        JoystickButton deployColor = new JoystickButton(Constants.MASTER, 7);
+        deployColor = new JoystickButton(Constants.MASTER, 7);
 
-        JoystickButton retractColor = new JoystickButton(Constants.MASTER, 8);
+        retractColor = new JoystickButton(Constants.MASTER, 8);
 
-        JoystickButton intake = new JoystickButton(Constants.MASTER, 9);
+        intake = new JoystickButton(Constants.MASTER, 9);
 
     }
 
