@@ -199,6 +199,14 @@ public class Spinny extends Subsystem {
 
     }
 
+    public void setColorDeploy(boolean deployed){
+        periodicIO.deployColor = deployed;
+    }
+
+    public boolean getColorDeployed(){
+        return periodicIO.deployColor;
+    }
+
     private void configTalons() {
         ErrorCode sensorPresent;
         sensorPresent = spinMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 100); //primary closed-loop, 100 ms timeout
