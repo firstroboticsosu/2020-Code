@@ -7,6 +7,7 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -40,7 +41,8 @@ public class Drive extends Subsystem {
 
     // Hardware
     private PigeonIMU pigeonIMU;
-    private TalonSRX driveFrontLeft, driveRearLeft, driveFrontRight, driveRearRight;
+    private TalonSRX driveFrontLeft, driveFrontRight; 
+    private VictorSPX driveRearLeft, driveRearRight;
     
     // Controllers
     private AdaptivePurePursuitController mPathFollower;
@@ -143,9 +145,9 @@ public class Drive extends Subsystem {
 
     private Drive() {
         driveFrontLeft = new TalonSRX(Constants.DRIVE_FRONT_LEFT_ID);
-        driveRearLeft = new TalonSRX(Constants.DRIVE_BACK_LEFT_ID);
+        driveRearLeft = new VictorSPX(Constants.DRIVE_BACK_LEFT_ID);
         driveFrontRight = new TalonSRX(Constants.DRIVE_FRONT_RIGHT_ID);
-        driveRearRight = new TalonSRX(Constants.DRIVE_BACK_RIGHT_ID);
+        driveRearRight = new VictorSPX(Constants.DRIVE_BACK_RIGHT_ID);
         pigeonIMU = new PigeonIMU(Constants.PIGEON_IMU_ID);
         angleController = new PIDF(Constants.ANGLE_KP, Constants.ANGLE_KI, Constants.ANGLE_KD, Constants.ANGLE_IMAX);
         configTalons();

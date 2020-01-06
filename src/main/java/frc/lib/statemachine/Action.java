@@ -1,6 +1,7 @@
 package frc.lib.statemachine;
 
 import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public abstract class Action {
 
@@ -59,6 +60,26 @@ public abstract class Action {
             }
 
             protected void end(){
+                action.onStop();
+            }
+        };
+    }
+
+    public static CommandBase toCommand2(Action action){
+        return new CommandBase() {
+            public void initialize(){
+                action.onStart();
+            }
+
+            public void execute(){
+                action.onLoop();
+            }
+
+            public boolean isFinished() {
+                return action.isFinished();
+            }
+
+            public void end(){
                 action.onStop();
             }
         };
