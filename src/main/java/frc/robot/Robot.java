@@ -10,9 +10,9 @@ package frc.robot;
 import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.loops.Looper;
-import frc.lib.statemachine.Scheduler;
 import frc.lib.statemachine.StateMachine;
 import frc.lib.util.VersionData;
 import frc.robot.statemachines.TestMach;
@@ -53,13 +53,13 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         Drive.getInstance().outputTelemetry();
         Lighting.getInstance().determineAlliance(m_ds.getAlliance());
+        CommandScheduler.getInstance().run();
     }
 
     @Override
     public void disabledInit() {
         //Stop current looper and start new looper
         enabledLooper.stop();
-        Scheduler.assertStop();
         StateMachine.assertStop();
 
         //reset any subsystems
@@ -109,7 +109,6 @@ public class Robot extends TimedRobot {
         enabledLooper.start();
 
         //Start scheduler
-        Scheduler.runScheduler();
         Lighting.getInstance().telop();
     }
 
@@ -129,13 +128,31 @@ public class Robot extends TimedRobot {
 
         //start new looper
         enabledLooper.start();
-
-        //Start scheduler
-        Scheduler.runScheduler();
     }
 
     @Override
     public void testPeriodic() {
+
+    }
+
+    public void initButtons(){
+        JoystickButton spinLeft = new JoystickButton(Constants.MASTER, 1);
+
+        JoystickButton spinRight = new JoystickButton(Constants.MASTER, 2);
+
+        JoystickButton openDoor = new JoystickButton(Constants.MASTER, 3);
+
+        JoystickButton CloseDoor = new JoystickButton(Constants.MASTER, 4);
+
+        JoystickButton deployRoller = new JoystickButton(Constants.MASTER, 5);
+
+        JoystickButton RetractRoller = new JoystickButton(Constants.MASTER, 6);
+
+        JoystickButton deployColor = new JoystickButton(Constants.MASTER, 7);
+
+        JoystickButton retractColor = new JoystickButton(Constants.MASTER, 8);
+
+        JoystickButton intake = new JoystickButton(Constants.MASTER, 9);
 
     }
 
