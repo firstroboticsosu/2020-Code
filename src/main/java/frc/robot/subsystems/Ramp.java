@@ -1,16 +1,10 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.ErrorCode;
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.loops.ILooper;
 import frc.lib.loops.Loop;
 import frc.robot.Constants;
@@ -28,7 +22,6 @@ public class Ramp extends Subsystem {
     private RampIO periodicIO;
 
     // Hardware
-    private TalonSRX upperRampMotor;
     private CANSparkMax lowerRampMotor;
     private DoubleSolenoid flapPiston;
     private DoubleSolenoid collectorPiston;
@@ -59,15 +52,13 @@ public class Ramp extends Subsystem {
 
     @Override
     public synchronized void writePeriodicOutputs() {
-        upperRampMotor.set(ControlMode.PercentOutput, periodicIO.upper_ramp_demand);
         lowerRampMotor.set(periodicIO.lower_ramp_demand);
         flapPiston.set(periodicIO.flap_closed ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
         collectorPiston.set(periodicIO.collector_down ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
     }
 
     private Ramp() {
-        lowerRampMotor = new CANSparkMax(Constants.COLLECTOR_ID, MotorType.kBrushless);
-        upperRampMotor = new TalonSRX(Constants.RAMP_ID);
+        lowerRampMotor = new CANSparkMax(Constants.RAMP_ID, MotorType.kBrushless);
         flapPiston = new DoubleSolenoid(Constants.FLAP_PISTON_FORWARD_ID, Constants.FLAP_PISTON_REVERSE_ID);
         collectorPiston = new DoubleSolenoid(Constants.COLLECTOR_FORWARD_ID, Constants.COLLECTOR_REVERSE_ID);
         configTalons();
@@ -81,22 +72,16 @@ public class Ramp extends Subsystem {
     }
 
     private void configTalons() {
-        ErrorCode sensorPresent;
-        sensorPresent = upperRampMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 100); //primary closed-loop, 100 ms timeout
-        if (sensorPresent != ErrorCode.OK) {
-            DriverStation.reportError("Could not detect left encoder: " + sensorPresent, false);
-        }
-        upperRampMotor.setSensorPhase(true);
-        upperRampMotor.selectProfileSlot(0, 0);
-        upperRampMotor.config_kF(0, Constants.UPPER_RAMP_KF, 0);
-        upperRampMotor.config_kP(0, Constants.UPPER_RAMP_KP, 0);
-        upperRampMotor.config_kI(0, Constants.UPPER_RAMP_KI, 0);
-        upperRampMotor.config_kD(0, Constants.UPPER_RAMP_KD, 0);
-        upperRampMotor.config_IntegralZone(0, 300);
-        upperRampMotor.setInverted(false);
-        upperRampMotor.setNeutralMode(NeutralMode.Brake);
-        upperRampMotor.configVoltageCompSaturation(Constants.RAMP_VCOMP);
-        upperRampMotor.enableVoltageCompensation(true);
+        lowerRampMotor.restoreFactoryDefaults();
+        CANPIDController m_pidController = lowerRampMotor.getPIDController();
+
+        // set PID coefficients
+        m_pidController.setP(Constants.LOWER_RAMP_KP);
+        m_pidController.setI(Constants.LOWER_RAMP_KI);
+        m_pidController.setD(Constants.LOWER_RAMP_KD);
+        m_pidController.setIZone(Constants.LOWER_RAMP_KIZ);
+        m_pidController.setFF(Constants.LOWER_RAMP_KFF);
+        m_pidController.setOutputRange(Constants.kMinOutput, Constants.kMaxOutput);
     }
 
     @Override
@@ -118,18 +103,15 @@ public class Ramp extends Subsystem {
         // OUTPUTS
         // Set desired output values
         public double lower_ramp_demand = 0.0;
-        public double upper_ramp_demand = 0.0;
         public boolean flap_closed = true;
         public boolean collector_down = false;
     }
 
     public void spin(boolean forwards) {
         periodicIO.lower_ramp_demand = forwards ? Constants.LOWER_RAMP_UP_SPEED : Constants.LOWER_RAMP_DOWN_SPEED;
-        periodicIO.upper_ramp_demand = forwards ? Constants.UPPER_RAMP_UP_SPEED : Constants.UPPER_RAMP_DOWN_SPEED;
     }
     public void stopSpinning() {
         periodicIO.lower_ramp_demand = 0;
-        periodicIO.upper_ramp_demand = 0;
     }
 
     public void setRoller(boolean wantDown) {

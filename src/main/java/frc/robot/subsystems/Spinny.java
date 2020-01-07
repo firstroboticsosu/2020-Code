@@ -102,7 +102,7 @@ public class Spinny extends Subsystem {
 
     private void initInactiveEncodingState() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
-        periodicIO.spin_demand = 0;
+        periodicIO.spin_demand = 0; // Just to make sure
         periodicIO.startTimestamp = Timer.getFPGATimestamp();
     }
 

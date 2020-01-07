@@ -16,7 +16,6 @@ public class Constants {
     public static final int DRIVE_BACK_RIGHT_ID = 4;
     public static final int SPINNY_ID = 5;
     public static final int RAMP_ID = 9;
-    public static final int COLLECTOR_ID = 7;
 
     //solenoid assignments
     public static final int FLAP_PISTON_FORWARD_ID = 0; //TODO pick these
@@ -115,24 +114,18 @@ public class Constants {
     /**
      * Ramp Configuration --------------------------------------
      */
+    public static final double LOWER_RAMP_KP = 0.1;
+    public static final double LOWER_RAMP_KI = 1e-4;
+    public static final double LOWER_RAMP_KD = 1;
+    public static final double LOWER_RAMP_KIZ = 0;
+    public static final double LOWER_RAMP_KFF = 0;
+    public static final double kMaxOutput = 1;
+    public static final double kMinOutput = -1;
+
     public static final double RAMP_VCOMP = 11.0; //V                11.0
-
-    public static final double UPPER_RAMP_KP = 0.44; //0.44
-    public static final double UPPER_RAMP_KI = 0.0;
-    public static final double UPPER_RAMP_KD = 30.0; //30
-    public static final double UPPER_RAMP_KF = 0.50;
-
-    public static final double UPPER_RAMP_UP_SPEED = .7;
-    public static final double UPPER_RAMP_DOWN_SPEED = -.7;
 
     public static final double LOWER_RAMP_UP_SPEED = .7;
     public static final double LOWER_RAMP_DOWN_SPEED = -.7;
-
-    public static final double FLAP_PISTON_UP_VALUE = 1;
-    public static final double FLAP_PISTON_DOWN_VALUE = 0;
-
-    public static final double COLLECTOR_PISTON_UP_VALUE = 1;
-    public static final double COLLECTOR_PISTON_DOWN_VALUE = 0;
 
     /**
      * General Configuration --------------------------------------
