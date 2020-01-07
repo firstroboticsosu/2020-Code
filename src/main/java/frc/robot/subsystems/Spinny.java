@@ -127,7 +127,7 @@ public class Spinny extends Subsystem {
         spinMotor = new TalonSRX(Constants.SPINNY_ID);
         deployPistonSolenoid = new DoubleSolenoid(Constants.COLOR_IN_ID, Constants.COLOR_OUT_ID);
         colorSensor = new ColorSensor();
-        motionConstraints = new MotionProfileConstraints(max_vel, max_acc)
+        //motionConstraints = new MotionProfileConstraints(max_vel, max_acc)
         configTalons();
         reset();
 
@@ -175,29 +175,19 @@ public class Spinny extends Subsystem {
     public void initAutoSpin(){
         if (mSpinnyControlState != SpinnyControlState.AUTO_SPIN) {
             spinMotor.selectProfileSlot(0, 0);
-            mSetpointGenerator.reset();
+            setpointGenerator.reset();
         }
         mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
 
     }
 
     private void updateAutoSpin(double timestamp){
-        final MotionState cur_state = new MotionState(timestamp, periodicIO.position_units, ticksPer100msToUnitsPerSecond(periodicIO.velocity_ticks_per_100ms), 0.0);
+        //final MotionState cur_state = new MotionState(timestamp, periodicIO.position_units, ticksPer100msToUnitsPerSecond(periodicIO.velocity_ticks_per_100ms), 0.0);
         
     }
 
     public void endAutoColor() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
-    }
-
-    public void initAutoSpin(){
-        //TODO create motion profiler and target goal
-        mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
-
-    }
-
-    private void updateAutoSpin(double timestamp) {
-
     }
 
     public void updateManualSpin(double speed){

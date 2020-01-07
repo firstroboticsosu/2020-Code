@@ -91,6 +91,11 @@ public class Constants {
     public static final double SPINNY_KD = 30.0; //30
     public static final double SPINNY_KF = 0.50;
 
+    public static final double SPINNY_MANUAL_FORWARD = 0.5;
+    public static final double SPINNY_MANUAL_BACKWARD = 0.5;
+    public static final double AUTO_COLOR_FORWARD_SPEED = 0;
+	public static final double AUTO_COLOR_BACKWARD_SPEED = 0;
+
     // Time (seconds) in which to stay in state INACTIVE_ENCODING before moving to INACTIVE
     public static final int INACTIVE_ENCODING_STATE_TIME = 3;
 
