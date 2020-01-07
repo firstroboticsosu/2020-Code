@@ -169,6 +169,10 @@ public class Spinny extends Subsystem {
         }
     }
 
+    public void endAutoColor() {
+        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
+    }
+
     public void initAutoSpin(){
         //TODO create motion profiler and target goal
         mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
