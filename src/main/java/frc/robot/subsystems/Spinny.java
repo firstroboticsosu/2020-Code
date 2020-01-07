@@ -36,7 +36,7 @@ public class Spinny extends Subsystem {
     //used internally for data
     private SpinnyControlState mSpinnyControlState = SpinnyControlState.INACTIVE;
     private SpinnyIO periodicIO;
-    private SetpointGenerator setpointGenerator = new SetpointGenerator();;
+    private SetpointGenerator setpointGenerator = new SetpointGenerator();
     private MotionProfileConstraints motionConstraints;
 
     // Hardware
@@ -63,8 +63,10 @@ public class Spinny extends Subsystem {
                         case INACTIVE_ENCODING:
                             updateEncoding();
                             if (timestamp - periodicIO.startTimestamp >= Constants.INACTIVE_ENCODING_STATE_TIME) {
+                                // Move to INACTIVE state
                                 mSpinnyControlState = SpinnyControlState.INACTIVE;
                                 periodicIO.spin_distance = 0.0;
+                                periodicIO.deployColor = false;
                                 periodicIO.activeColor = null;
                             }
 
@@ -75,7 +77,7 @@ public class Spinny extends Subsystem {
 
                         case AUTO_COLOR:
                             updateEncoding();
-                            updateAutoColor(timestamp);
+                            updateAutoColor();
                             break;
 
                         case MANUAL:
@@ -98,9 +100,12 @@ public class Spinny extends Subsystem {
 
     private void initInactiveEncodingState() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
+        periodicIO.spin_demand = 0;
+        periodicIO.startTimestamp = Timer.getFPGATimestamp();
     }
 
     private void updateEncoding() {
+        periodicIO.deployColor = true; // If we're updating encoding we'll want to have this deployed
         double[] rawColorData = periodicIO.sensedColors;
         int[] colorData = {(int) (255*rawColorData[0]), (int) (255*rawColorData[1]), (int) (255*rawColorData[2])};
         String color = resolveToColor(colorData);
@@ -152,7 +157,7 @@ public class Spinny extends Subsystem {
         mSpinnyControlState = SpinnyControlState.AUTO_COLOR;
     }
 
-    private void updateAutoColor(double timestamp){
+    private void updateAutoColor(){
         if (periodicIO.activeTargetColor != null) {
 
             // If we're already on target
@@ -187,7 +192,7 @@ public class Spinny extends Subsystem {
     }
 
     public void endAutoColor() {
-        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
+        initInactiveEncodingState();
     }
 
     public void updateManualSpin(double speed){
@@ -199,13 +204,11 @@ public class Spinny extends Subsystem {
     }
 
     public void deactivate(){
-        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
-        periodicIO.spin_demand = 0;
+        initInactiveEncodingState();
     }
 
     public void abort() {
-        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
-        periodicIO.startTimestamp = Timer.getFPGATimestamp();
+        initInactiveEncodingState();
     }
 
     public void setColorDeploy(boolean deployed){
