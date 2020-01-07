@@ -83,11 +83,8 @@ public class Constants {
     // Forward is clockwise, backwards is counter-clockwise
     // Percent speed at which to run for manual forward/backward
     public static final double SPINNY_WHEEL_DIAMETER = 3.0; //in
-    public static final double SPINNY_PERCENT_FORWARD = .5;
-    public static final double SPINNY_PERCENT_BACKWARD = -.5;
-
-    public static final double AUTO_COLOR_FORWARD_SPEED = .5;
-    public static final double AUTO_COLOR_BACKWARD_SPEED = -.5;
+    public static final double SPINNY_MAX_VEL = 50; //in/s
+    public static final double SPINNY_MAX_ACCEL = 30; //in/s^2
 
     public static final double SPINNY_KP = 0.44; //0.44
     public static final double SPINNY_KI = 0.0;

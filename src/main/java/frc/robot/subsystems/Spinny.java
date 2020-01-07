@@ -14,6 +14,7 @@ import frc.lib.drivers.ColorSensor;
 import frc.lib.loops.ILooper;
 import frc.lib.loops.Loop;
 import frc.lib.motion.MotionProfileConstraints;
+import frc.lib.motion.MotionState;
 import frc.lib.motion.SetpointGenerator;
 import frc.robot.Constants;
 
@@ -35,7 +36,7 @@ public class Spinny extends Subsystem {
     //used internally for data
     private SpinnyControlState mSpinnyControlState = SpinnyControlState.INACTIVE;
     private SpinnyIO periodicIO;
-    private SetpointGenerator setpointGenerator;
+    private SetpointGenerator setpointGenerator = new SetpointGenerator();;
     private MotionProfileConstraints motionConstraints;
 
     // Hardware
@@ -127,6 +128,7 @@ public class Spinny extends Subsystem {
         spinMotor = new TalonSRX(Constants.SPINNY_ID);
         deployPistonSolenoid = new DoubleSolenoid(Constants.COLOR_IN_ID, Constants.COLOR_OUT_ID);
         colorSensor = new ColorSensor();
+        motionConstraints = new MotionProfileConstraints(max_vel, max_acc)
         configTalons();
         reset();
 
@@ -152,16 +154,6 @@ public class Spinny extends Subsystem {
     }
 
     private void updateAutoColor(double timestamp) {
-        
-    }
-
-    public void initAutoSpin(){
-        //TODO create motion profiler and target goal
-        mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
-
-    }
-
-    private void updateAutoSpin(double timestamp){
         if (periodicIO.activeTargetColor != null) {
 
             // If we're already on target
@@ -178,6 +170,21 @@ public class Spinny extends Subsystem {
                 periodicIO.spin_demand = Constants.AUTO_COLOR_FORWARD_SPEED;
             }
         }
+        
+    }
+
+    public void initAutoSpin(){
+        if (mSpinnyControlState != SpinnyControlState.AUTO_SPIN) {
+            spinMotor.selectProfileSlot(0, 0);
+            mSetpointGenerator.reset();
+        }
+        mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
+
+    }
+
+    private void updateAutoSpin(double timestamp){
+        final MotionState cur_state = new MotionState(timestamp, periodicIO.position_units, ticksPer100msToUnitsPerSecond(periodicIO.velocity_ticks_per_100ms), 0.0);
+        
     }
 
     public void updateManualSpin(double speed){
