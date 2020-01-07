@@ -20,7 +20,6 @@ public class ManualSpin extends Action{
 
     @Override
     public void onLoop() {
-        
 
     }
 
