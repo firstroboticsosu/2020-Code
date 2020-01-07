@@ -19,6 +19,7 @@ import frc.lib.util.VersionData;
 import frc.robot.actions.ramp.Door;
 import frc.robot.actions.ramp.Roller;
 import frc.robot.actions.ramp.Spin;
+import frc.robot.actions.spinny.AutoColor;
 import frc.robot.actions.spinny.ManualSpin;
 import frc.robot.statemachines.TestMach;
 import frc.robot.subsystems.*;
@@ -32,7 +33,7 @@ public class Robot extends TimedRobot {
 
     JoystickButton spinLeft, spinRight, openDoor, closeDoor,
      deployRoller, retractRoller, deployColor, retractColor, intakeForward,
-     intakeBackward;
+     intakeBackward, autoColor;
 
     SubsystemManager manager;
     Looper enabledLooper;
@@ -174,6 +175,8 @@ public class Robot extends TimedRobot {
         intakeBackward = new JoystickButton(Constants.MASTER, 10);
         intakeBackward.whileHeld(Action.toCommand2(new Spin(false)));
 
+        autoColor = new JoystickButton(Constants.MASTER, 11);
+        autoColor.whileHeld(Action.toCommand2(new AutoColor()));
     }
 
 }

@@ -30,7 +30,7 @@ public class Spinny extends Subsystem {
     }
 
     // Spinner colors in clockwise order
-    private ArrayList<String> spinnerColors = new ArrayList<String>(Arrays.asList("B", "G", "R", "Y"));
+    private ArrayList<String> spinnerColors = new ArrayList<>(Arrays.asList("B", "G", "R", "Y"));
 
     //used internally for data
     private SpinnyControlState mSpinnyControlState = SpinnyControlState.INACTIVE;
@@ -150,17 +150,7 @@ public class Spinny extends Subsystem {
         mSpinnyControlState = SpinnyControlState.AUTO_COLOR;
     }
 
-    private void updateAutoColor(double timestamp) {
-        
-    }
-
-    public void initAutoSpin(){
-        //TODO create motion profiler and target goal
-        mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
-
-    }
-
-    private void updateAutoSpin(double timestamp){
+    private void updateAutoColor(double timestamp){
         if (periodicIO.activeTargetColor != null) {
 
             // If we're already on target
@@ -177,6 +167,16 @@ public class Spinny extends Subsystem {
                 periodicIO.spin_demand = Constants.AUTO_COLOR_FORWARD_SPEED;
             }
         }
+    }
+
+    public void initAutoSpin(){
+        //TODO create motion profiler and target goal
+        mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
+
+    }
+
+    private void updateAutoSpin(double timestamp) {
+
     }
 
     public void updateManualSpin(double speed){
