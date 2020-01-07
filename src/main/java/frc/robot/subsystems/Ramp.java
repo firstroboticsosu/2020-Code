@@ -1,16 +1,10 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.ErrorCode;
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.loops.ILooper;
 import frc.lib.loops.Loop;
 import frc.robot.Constants;
@@ -78,7 +72,16 @@ public class Ramp extends Subsystem {
     }
 
     private void configTalons() {
-        // TODO
+        lowerRampMotor.restoreFactoryDefaults();
+        CANPIDController m_pidController = lowerRampMotor.getPIDController();
+
+        // set PID coefficients
+        m_pidController.setP(Constants.LOWER_RAMP_KP);
+        m_pidController.setI(Constants.LOWER_RAMP_KI);
+        m_pidController.setD(Constants.LOWER_RAMP_KD);
+        m_pidController.setIZone(Constants.LOWER_RAMP_KIZ);
+        m_pidController.setFF(Constants.LOWER_RAMP_KFF);
+        m_pidController.setOutputRange(Constants.kMinOutput, Constants.kMaxOutput);
     }
 
     @Override

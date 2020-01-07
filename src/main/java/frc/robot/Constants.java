@@ -112,6 +112,14 @@ public class Constants {
     /**
      * Ramp Configuration --------------------------------------
      */
+    public static final double LOWER_RAMP_KP = 0.1;
+    public static final double LOWER_RAMP_KI = 1e-4;
+    public static final double LOWER_RAMP_KD = 1;
+    public static final double LOWER_RAMP_KIZ = 0;
+    public static final double LOWER_RAMP_KFF = 0;
+    public static final double kMaxOutput = 1;
+    public static final double kMinOutput = -1;
+
     public static final double RAMP_VCOMP = 11.0; //V                11.0
 
     public static final double LOWER_RAMP_UP_SPEED = .7;
