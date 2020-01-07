@@ -101,9 +101,9 @@ public class Spinny extends Subsystem {
     }
 
     private void initInactiveEncodingState() {
+        periodicIO.startTimestamp = Timer.getFPGATimestamp();
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
         periodicIO.spin_demand = 0; // Just to make sure
-        periodicIO.startTimestamp = Timer.getFPGATimestamp();
     }
 
     private void updateEncoding() {
@@ -136,7 +136,7 @@ public class Spinny extends Subsystem {
         colorSensor = new ColorSensor();
         motionConstraints = new MotionProfileConstraints(Constants.SPINNY_MAX_VEL, Constants.SPINNY_MAX_ACCEL);
         velocityFollower = new ProfileFollower(Constants.SPINNY_KP, Constants.SPINNY_KI, Constants.SPINNY_KV,
-         Constants.SPINNY_KFFV, Constants.SPINNY_KFFA, Constants.SPINNY_KS);
+                Constants.SPINNY_KFFV, Constants.SPINNY_KFFA, Constants.SPINNY_KS);
         configTalons();
         reset();
 
@@ -179,7 +179,6 @@ public class Spinny extends Subsystem {
                 periodicIO.spin_demand = Constants.AUTO_COLOR_FORWARD_SPEED;
             }
         }
-        
     }
 
     public void initAutoSpin(){
@@ -197,22 +196,6 @@ public class Spinny extends Subsystem {
         final MotionState cur_state = new MotionState(timestamp, periodicIO.spin_distance,
          ticksPer100msToUnitsPerSecond(periodicIO.spin_velocity), 0.0);
         periodicIO.spin_demand = velocityFollower.update(cur_state, timestamp);
-    }
-
-    private double ticksPer100msToUnitsPerSecond(double ticks_per_100ms) {
-        return ticksToUnits(ticks_per_100ms) * 10.0;
-    }
-
-    private double unitsPerSecondToTicksPer100ms(double units_per_second) {
-        return unitsToTicks(units_per_second) / 10.0;
-    }
-
-    private double unitsToTicks(double units) {
-        return units * Math.PI * Constants.SPINNY_WHEEL_DIAMETER;
-    }
-
-    protected double ticksToUnits(double ticks) {
-        return ticks / (Math.PI * Constants.SPINNY_WHEEL_DIAMETER);
     }
 
     public boolean autoSpinComplete(){
@@ -375,4 +358,21 @@ public class Spinny extends Subsystem {
     private static double rpmToTicksPer100ms(double rpm) {
         return ((rpm * 512.0) / 75.0);
     }
+
+    private double ticksPer100msToUnitsPerSecond(double ticks_per_100ms) {
+        return ticksToUnits(ticks_per_100ms) * 10.0;
+    }
+
+    private double unitsPerSecondToTicksPer100ms(double units_per_second) {
+        return unitsToTicks(units_per_second) / 10.0;
+    }
+
+    private double unitsToTicks(double units) {
+        return units * Math.PI * Constants.SPINNY_WHEEL_DIAMETER;
+    }
+
+    protected double ticksToUnits(double ticks) {
+        return ticks / (Math.PI * Constants.SPINNY_WHEEL_DIAMETER);
+    }
+
 }

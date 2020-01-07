@@ -65,6 +65,7 @@ public class Ramp extends Subsystem {
         reset();
     }
 
+
     public void reset() {
         periodicIO = new Ramp.RampIO();
         flapPiston.set(DoubleSolenoid.Value.kOff);
