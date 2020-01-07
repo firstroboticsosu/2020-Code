@@ -25,9 +25,6 @@ public class Ramp extends Subsystem {
     }
 
     //used internally for data
-    private IntakeControlState mRampControlState = IntakeControlState.INACTIVE;
-    private OutputControlState mOutputControlState = OutputControlState.INACTIVE;
-    private CollectorControlState mCollectorControlState = CollectorControlState.INACTIVE;
     private RampIO periodicIO;
 
     // Hardware
@@ -58,7 +55,6 @@ public class Ramp extends Subsystem {
 
     @Override
     public synchronized void readPeriodicInputs() {
-        //TODO read in button info
     }
 
     @Override
@@ -112,49 +108,12 @@ public class Ramp extends Subsystem {
 
     }
 
-    enum IntakeControlState {
-        INACTIVE,
-        UP,
-        DOWN;
-
-        public String toString() {
-            return name().charAt(0) + name().substring(1).toLowerCase();
-        }
-    }
-
-    enum OutputControlState {
-        INACTIVE,
-        UP,
-        DOWN;
-
-        public String toString() {
-            return name().charAt(0) + name().substring(1).toLowerCase();
-        }
-    }
-
-    enum CollectorControlState {
-        INACTIVE,
-        UP,
-        DOWN;
-
-        public String toString() {
-            return name().charAt(0) + name().substring(1).toLowerCase();
-        }
-    }
-
     public void outputTelemetry() {
-        SmartDashboard.putString("Drive/Drive State", mRampControlState.toString());
-        SmartDashboard.putString("Drive/Drive State", mOutputControlState.toString());
     }
 
     public class RampIO extends PeriodicIO {
         // INPUTS
         // Operator input
-        public boolean forwardButtonPressed = false;
-        public boolean backwardButtonPressed = false;
-
-        public boolean flapUpButtonPressed = false;
-        public boolean flapDownButtonPressed = false;
 
         // OUTPUTS
         // Set desired output values
