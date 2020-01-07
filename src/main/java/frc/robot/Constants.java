@@ -15,16 +15,16 @@ public class Constants {
     public static final int DRIVE_FRONT_RIGHT_ID = 2;
     public static final int DRIVE_BACK_RIGHT_ID = 4;
     public static final int SPINNY_ID = 5;
-    public static final int RAMP_ID = 6;
+    public static final int RAMP_ID = 9;
     public static final int COLLECTOR_ID = 7;
 
     //solenoid assignments
     public static final int FLAP_PISTON_FORWARD_ID = 0; //TODO pick these
-    public static final int FLAP_PISTON_REVERSE_ID = 0;
-    public static final int COLLECTOR_FORWARD_ID = 0;
-    public static final int COLLECTOR_REVERSE_ID = 0;
-    public static final int COLOR_OUT_ID = 0;
-    public static final int COLOR_IN_ID = 0;
+    public static final int FLAP_PISTON_REVERSE_ID = 1;
+    public static final int COLLECTOR_FORWARD_ID = 2;
+    public static final int COLLECTOR_REVERSE_ID = 3;
+    public static final int COLOR_OUT_ID = 4;
+    public static final int COLOR_IN_ID = 5;
 
     //Pigeon ID
     public static final int PIGEON_IMU_ID = 1;
@@ -88,8 +88,10 @@ public class Constants {
 
     public static final double SPINNY_KP = 0.44; //0.44
     public static final double SPINNY_KI = 0.0;
-    public static final double SPINNY_KD = 30.0; //30
-    public static final double SPINNY_KF = 0.50;
+    public static final double SPINNY_KV = 30.0; //30
+    public static final double SPINNY_KFFV = 0.50;
+    public static final double SPINNY_KFFA = 0.50;
+    public static final double SPINNY_KS = 0.50;
 
     public static final double SPINNY_MANUAL_FORWARD = 0.5;
     public static final double SPINNY_MANUAL_BACKWARD = 0.5;

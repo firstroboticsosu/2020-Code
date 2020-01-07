@@ -14,7 +14,9 @@ import frc.lib.drivers.ColorSensor;
 import frc.lib.loops.ILooper;
 import frc.lib.loops.Loop;
 import frc.lib.motion.MotionProfileConstraints;
+import frc.lib.motion.MotionProfileGoal;
 import frc.lib.motion.MotionState;
+import frc.lib.motion.ProfileFollower;
 import frc.lib.motion.SetpointGenerator;
 import frc.robot.Constants;
 
@@ -36,7 +38,7 @@ public class Spinny extends Subsystem {
     //used internally for data
     private SpinnyControlState mSpinnyControlState = SpinnyControlState.INACTIVE;
     private SpinnyIO periodicIO;
-    private SetpointGenerator setpointGenerator = new SetpointGenerator();
+    private ProfileFollower velocityFollower;
     private MotionProfileConstraints motionConstraints;
 
     // Hardware
@@ -119,7 +121,7 @@ public class Spinny extends Subsystem {
 
     @Override
     public synchronized void readPeriodicInputs() {
-        periodicIO.sensedColors = colorSensor.getColor();
+        periodicIO.sensedColors = new double [] {0.0,0.0,0.0};//colorSensor.getColor();
     }
 
     @Override
@@ -132,7 +134,9 @@ public class Spinny extends Subsystem {
         spinMotor = new TalonSRX(Constants.SPINNY_ID);
         deployPistonSolenoid = new DoubleSolenoid(Constants.COLOR_IN_ID, Constants.COLOR_OUT_ID);
         colorSensor = new ColorSensor();
-        //motionConstraints = new MotionProfileConstraints(max_vel, max_acc)
+        motionConstraints = new MotionProfileConstraints(Constants.SPINNY_MAX_VEL, Constants.SPINNY_MAX_ACCEL);
+        velocityFollower = new ProfileFollower(Constants.SPINNY_KP, Constants.SPINNY_KI, Constants.SPINNY_KV,
+         Constants.SPINNY_KFFV, Constants.SPINNY_KFFA, Constants.SPINNY_KS);
         configTalons();
         reset();
 
@@ -140,6 +144,7 @@ public class Spinny extends Subsystem {
 
     public void reset() {
         periodicIO = new Spinny.SpinnyIO();
+        velocityFollower.setConstraints(motionConstraints);
         resetSensors();
         abort();
     }
@@ -180,15 +185,38 @@ public class Spinny extends Subsystem {
     public void initAutoSpin(){
         if (mSpinnyControlState != SpinnyControlState.AUTO_SPIN) {
             spinMotor.selectProfileSlot(0, 0);
-            setpointGenerator.reset();
+            
         }
+        velocityFollower.resetIntegral();
+        velocityFollower.resetProfile();
+        velocityFollower.setGoal(new MotionProfileGoal(30 * Math.PI));
         mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
-
     }
 
     private void updateAutoSpin(double timestamp){
-        //final MotionState cur_state = new MotionState(timestamp, periodicIO.position_units, ticksPer100msToUnitsPerSecond(periodicIO.velocity_ticks_per_100ms), 0.0);
-        
+        final MotionState cur_state = new MotionState(timestamp, periodicIO.spin_distance,
+         ticksPer100msToUnitsPerSecond(periodicIO.spin_velocity), 0.0);
+        periodicIO.spin_demand = velocityFollower.update(cur_state, timestamp);
+    }
+
+    private double ticksPer100msToUnitsPerSecond(double ticks_per_100ms) {
+        return ticksToUnits(ticks_per_100ms) * 10.0;
+    }
+
+    private double unitsPerSecondToTicksPer100ms(double units_per_second) {
+        return unitsToTicks(units_per_second) / 10.0;
+    }
+
+    private double unitsToTicks(double units) {
+        return units * Math.PI * Constants.SPINNY_WHEEL_DIAMETER;
+    }
+
+    protected double ticksToUnits(double ticks) {
+        return ticks / (Math.PI * Constants.SPINNY_WHEEL_DIAMETER);
+    }
+
+    public boolean autoSpinComplete(){
+        return velocityFollower.onTarget();
     }
 
     public void endAutoColor() {
@@ -208,7 +236,7 @@ public class Spinny extends Subsystem {
     }
 
     public void abort() {
-        initInactiveEncodingState();
+        mSpinnyControlState = SpinnyControlState.INACTIVE;
     }
 
     public void setColorDeploy(boolean deployed){
@@ -226,14 +254,8 @@ public class Spinny extends Subsystem {
             DriverStation.reportError("Could not detect left encoder: " + sensorPresent, false);
         }
         spinMotor.setSensorPhase(true);
-        spinMotor.selectProfileSlot(0, 0);
-        spinMotor.config_kF(0, Constants.SPINNY_KF, 0);
-        spinMotor.config_kP(0, Constants.SPINNY_KP, 0);
-        spinMotor.config_kI(0, Constants.SPINNY_KI, 0);
-        spinMotor.config_kD(0, Constants.SPINNY_KD, 0);
-        spinMotor.config_IntegralZone(0, 300);
         spinMotor.setInverted(false);
-        spinMotor.setNeutralMode(NeutralMode.Brake);
+        spinMotor.setNeutralMode(NeutralMode.Coast);
         spinMotor.configVoltageCompSaturation(Constants.SPINNY_VCOMP);
         spinMotor.enableVoltageCompensation(true);
     }
@@ -268,11 +290,13 @@ public class Spinny extends Subsystem {
         public String activeTargetColor = null; // The color we need to see to have the correct color showing on the sensor
         public double[] sensedColors = {0, 0, 0}; // The input we get from the sensor
 
+        public double spin_velocity = 0.0;
+        public double spin_distance = 0.0; // How much we've spun the wheel recently
+
         // OUTPUTS
         // Internal counters
         public String activeColor = null; // What the color we're seeing right now is, null for unknown
         public double startTimestamp = 0.0; // The time at which we disengaged an active mode, used to disable vision encoding after time
-        public double spin_distance = 0.0; // How much we've spun the wheel recently
 
         // Spin motor output values
         public double spin_demand = 0.0; // The outgoing request for spin speed

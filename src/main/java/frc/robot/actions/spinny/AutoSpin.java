@@ -1,11 +1,12 @@
 package frc.robot.actions.spinny;
 
 import frc.lib.statemachine.Action;
+import frc.robot.subsystems.Spinny;
 
 public class AutoSpin extends Action{
 
     public AutoSpin(){
-        
+        Spinny.getInstance().initAutoSpin();
     }
 
     @Override
@@ -22,14 +23,12 @@ public class AutoSpin extends Action{
 
     @Override
     public boolean isFinished() {
-        // TODO Auto-generated method stub
-        return false;
+        return Spinny.getInstance().autoSpinComplete();
     }
 
     @Override
     public void onStop() {
-        // TODO Auto-generated method stub
-
+        Spinny.getInstance().deactivate();
     }
 
 }

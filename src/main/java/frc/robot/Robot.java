@@ -43,7 +43,9 @@ public class Robot extends TimedRobot {
         //Create instance of subsystem manager
         this.manager = new SubsystemManager(Arrays.asList(
             PoseEstimator.getInstance(),
-            Drive.getInstance()
+            Drive.getInstance(),
+            Spinny.getInstance(),
+            Ramp.getInstance()
             ), true);
 
         //Create instance of loopers for enabled and disabled modes
