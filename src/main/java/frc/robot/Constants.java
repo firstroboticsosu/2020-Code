@@ -103,7 +103,7 @@ public class Constants {
     public static final int[] YELLOW_IDEAL_COLOR_READINGS = {255, 255, 0};
 
     // The maximum amount of deviation away from a color before it's not that color
-    public static final int MAXIMUM_TOLERANCE = 100;
+    public static final int MAXIMUM_TOLERANCE = 60;
 
     /**
      * Ramp Configuration --------------------------------------

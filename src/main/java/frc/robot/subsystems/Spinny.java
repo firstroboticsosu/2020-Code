@@ -31,7 +31,7 @@ public class Spinny extends Subsystem {
     }
 
     // Spinner colors in clockwise order
-    private ArrayList<String> spinnerColors = new ArrayList<String>(Arrays.asList("B", "G", "R", "Y"));
+    private ArrayList<String> spinnerColors = new ArrayList<>(Arrays.asList("B", "G", "R", "Y"));
 
     //used internally for data
     private SpinnyControlState mSpinnyControlState = SpinnyControlState.INACTIVE;
@@ -96,7 +96,6 @@ public class Spinny extends Subsystem {
         });
     }
 
-
     private void initInactiveEncodingState() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
     }
@@ -153,7 +152,7 @@ public class Spinny extends Subsystem {
         mSpinnyControlState = SpinnyControlState.AUTO_COLOR;
     }
 
-    private void updateAutoColor(double timestamp) {
+    private void updateAutoColor(double timestamp){
         if (periodicIO.activeTargetColor != null) {
 
             // If we're already on target
@@ -187,6 +186,20 @@ public class Spinny extends Subsystem {
         
     }
 
+    public void endAutoColor() {
+        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
+    }
+
+    public void initAutoSpin(){
+        //TODO create motion profiler and target goal
+        mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
+
+    }
+
+    private void updateAutoSpin(double timestamp) {
+
+    }
+
     public void updateManualSpin(double speed){
         if(mSpinnyControlState != SpinnyControlState.MANUAL){
             spinMotor.set(ControlMode.PercentOutput, 0);
@@ -203,7 +216,6 @@ public class Spinny extends Subsystem {
     public void abort() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
         periodicIO.startTimestamp = Timer.getFPGATimestamp();
-
     }
 
     public void setColorDeploy(boolean deployed){

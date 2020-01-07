@@ -3,17 +3,17 @@ package frc.robot.actions.ramp;
 import frc.lib.statemachine.Action;
 import frc.robot.subsystems.Ramp;
 
-public class Door extends Action {
+public class Spin extends Action {
 
-    boolean wantClosed;
+    boolean forwards;
 
-    public Door(boolean wantClosed) {
-        this.wantClosed = wantClosed;
+    public Spin(boolean forwards) {
+        this.forwards = forwards;
     }
 
     @Override
     public void onStart() {
-        Ramp.getInstance().setDoor(wantClosed);
+        Ramp.getInstance().spin(forwards);
     }
 
     @Override
@@ -28,6 +28,6 @@ public class Door extends Action {
 
     @Override
     public void onStop() {
-
+        Ramp.getInstance().stopSpinning();
     }
 }
