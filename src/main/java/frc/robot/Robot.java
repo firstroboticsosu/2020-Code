@@ -16,6 +16,9 @@ import frc.lib.loops.Looper;
 import frc.lib.statemachine.Action;
 import frc.lib.statemachine.StateMachine;
 import frc.lib.util.VersionData;
+import frc.robot.actions.ramp.Door;
+import frc.robot.actions.ramp.Roller;
+import frc.robot.actions.ramp.Spin;
 import frc.robot.actions.spinny.ManualSpin;
 import frc.robot.statemachines.TestMach;
 import frc.robot.subsystems.*;
@@ -28,7 +31,8 @@ import frc.robot.subsystems.*;
 public class Robot extends TimedRobot {
 
     JoystickButton spinLeft, spinRight, openDoor, closeDoor,
-     deployRoller, RetractRoller, deployColor, retractColor, intake;
+     deployRoller, retractRoller, deployColor, retractColor, intakeForward,
+     intakeBackward;
 
     SubsystemManager manager;
     Looper enabledLooper;
@@ -143,23 +147,32 @@ public class Robot extends TimedRobot {
     //TODO make these global? seems to be yes
     public void initButtons(){
         spinLeft = new JoystickButton(Constants.MASTER, 1);
-        spinLeft.whileHeld(Action.toCommand2(new ManualSpin(0.5)));
+        spinLeft.whileHeld(Action.toCommand2(new ManualSpin(Constants.SPINNY_MANUAL_FORWARD)));
 
         spinRight = new JoystickButton(Constants.MASTER, 2);
+        spinRight.whileHeld(Action.toCommand2(new ManualSpin(Constants.SPINNY_MANUAL_BACKWARD)));
 
         openDoor = new JoystickButton(Constants.MASTER, 3);
+        openDoor.whileHeld(Action.toCommand2(new Door(false)));
 
         closeDoor = new JoystickButton(Constants.MASTER, 4);
+        closeDoor.whileHeld(Action.toCommand2(new Door(true)));
 
         deployRoller = new JoystickButton(Constants.MASTER, 5);
+        deployRoller.whileHeld(Action.toCommand2(new Roller(true)));
 
-        RetractRoller = new JoystickButton(Constants.MASTER, 6);
+        retractRoller = new JoystickButton(Constants.MASTER, 6);
+        retractRoller.whileHeld(Action.toCommand2(new Roller(false)));
 
         deployColor = new JoystickButton(Constants.MASTER, 7);
 
         retractColor = new JoystickButton(Constants.MASTER, 8);
 
-        intake = new JoystickButton(Constants.MASTER, 9);
+        intakeForward = new JoystickButton(Constants.MASTER, 9);
+        intakeForward.whileHeld(Action.toCommand2(new Spin(true)));
+
+        intakeBackward = new JoystickButton(Constants.MASTER, 10);
+        intakeBackward.whileHeld(Action.toCommand2(new Spin(false)));
 
     }
 

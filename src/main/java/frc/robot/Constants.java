@@ -83,8 +83,8 @@ public class Constants {
     // Forward is clockwise, backwards is counter-clockwise
     // Percent speed at which to run for manual forward/backward
     public static final double SPINNY_WHEEL_DIAMETER = 3.0; //in
-    public static final double SPINNY_PERCENT_FORWARD = .5;
-    public static final double SPINNY_PERCENT_BACKWARD = -.5;
+    public static final double SPINNY_MANUAL_FORWARD = .5;
+    public static final double SPINNY_MANUAL_BACKWARD = -.5;
 
     public static final double AUTO_COLOR_FORWARD_SPEED = .5;
     public static final double AUTO_COLOR_BACKWARD_SPEED = -.5;
@@ -106,7 +106,7 @@ public class Constants {
     public static final int[] YELLOW_IDEAL_COLOR_READINGS = {255, 255, 0};
 
     // The maximum amount of deviation away from a color before it's not that color
-    public static final int MAXIMUM_TOLERANCE = 100;
+    public static final int MAXIMUM_TOLERANCE = 60;
 
     /**
      * Ramp Configuration --------------------------------------

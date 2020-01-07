@@ -3,17 +3,17 @@ package frc.robot.actions.ramp;
 import frc.lib.statemachine.Action;
 import frc.robot.subsystems.Ramp;
 
-public class Door extends Action {
+public class Roller extends Action {
 
-    boolean wantClosed;
+    boolean wantDown;
 
-    public Door(boolean wantClosed) {
-        this.wantClosed = wantClosed;
+    public Roller(boolean wantDown) {
+        this.wantDown = wantDown;
     }
 
     @Override
     public void onStart() {
-        Ramp.getInstance().setDoor(wantClosed);
+        Ramp.getInstance().setRoller(wantDown);
     }
 
     @Override

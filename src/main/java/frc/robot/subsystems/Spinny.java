@@ -95,7 +95,6 @@ public class Spinny extends Subsystem {
         });
     }
 
-
     private void initInactiveEncodingState() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
     }
@@ -196,7 +195,6 @@ public class Spinny extends Subsystem {
     public void abort() {
         mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
         periodicIO.startTimestamp = Timer.getFPGATimestamp();
-
     }
 
     public void setColorDeploy(boolean deployed){

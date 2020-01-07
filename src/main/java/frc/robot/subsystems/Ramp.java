@@ -47,7 +47,6 @@ public class Ramp extends Subsystem {
             public void onLoop(double timestamp) {
                 synchronized (Ramp.this) {
 
-
                 }
             }
 
@@ -166,20 +165,16 @@ public class Ramp extends Subsystem {
         public boolean collector_down = false;
     }
 
-    public void spinUp() {
-        periodicIO.lower_ramp_demand = Constants.LOWER_RAMP_UP_SPEED;
-        periodicIO.upper_ramp_demand = Constants.UPPER_RAMP_UP_SPEED;
-    }
-    public void spinDown() {
-        periodicIO.lower_ramp_demand = Constants.LOWER_RAMP_DOWN_SPEED;
-        periodicIO.upper_ramp_demand = Constants.UPPER_RAMP_DOWN_SPEED;
+    public void spin(boolean forwards) {
+        periodicIO.lower_ramp_demand = forwards ? Constants.LOWER_RAMP_UP_SPEED : Constants.LOWER_RAMP_DOWN_SPEED;
+        periodicIO.upper_ramp_demand = forwards ? Constants.UPPER_RAMP_UP_SPEED : Constants.UPPER_RAMP_DOWN_SPEED;
     }
     public void stopSpinning() {
         periodicIO.lower_ramp_demand = 0;
         periodicIO.upper_ramp_demand = 0;
     }
 
-    public void setCollector(boolean wantDown) {
+    public void setRoller(boolean wantDown) {
         periodicIO.collector_down = wantDown;
     }
 
