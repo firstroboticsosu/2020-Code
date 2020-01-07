@@ -80,7 +80,9 @@ public class ReflectingLogger<T> {
 
             //Attempt to append subsystem IO value
             try {
-                if (CSVWritable.class.isAssignableFrom(entry.getKey().getType())) {
+                if(entry.getKey().get(entry.getValue()) == null){
+                    line.append("null");
+                } else if (CSVWritable.class.isAssignableFrom(entry.getKey().getType())) {
                     line.append(((CSVWritable) entry.getKey().get(entry.getValue())).toCSV());
                 } else {
                     line.append(entry.getKey().get(entry.getValue()).toString());

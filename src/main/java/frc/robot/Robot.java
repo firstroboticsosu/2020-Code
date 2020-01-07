@@ -59,6 +59,7 @@ public class Robot extends TimedRobot {
         //Final cleanup after initialization
         VersionData.WriteBuildInfoToDashboard();
         Lighting.reset();
+        initButtons();
     }
 
     @Override
@@ -76,6 +77,7 @@ public class Robot extends TimedRobot {
 
         //reset any subsystems
         //not normally neccessary for most systems
+        Spinny.getInstance().reset();
 
         //start new looper
         disabledLooper.start();
