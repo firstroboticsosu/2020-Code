@@ -1,7 +1,10 @@
 package frc.lib.statemachine;
 
-import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import java.util.HashSet;
+import java.util.Set;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 
 public abstract class Action {
 
@@ -40,33 +43,8 @@ public abstract class Action {
         }
     }
 
-    /**
-     * converts an action to a wpilib command for buttons
-     */
-    @Deprecated
-    public static Command toCommand(Action action){
+    public static Command toCommand2(Action action){
         return new Command() {
-
-            protected void initialize(){
-                action.onStart();
-            }
-
-            protected void execute(){
-                action.onLoop();
-            }
-
-            protected boolean isFinished() {
-                return action.isFinished();
-            }
-
-            protected void end(){
-                action.onStop();
-            }
-        };
-    }
-
-    public static CommandBase toCommand2(Action action){
-        return new CommandBase() {
             public void initialize(){
                 action.onStart();
             }
@@ -79,8 +57,12 @@ public abstract class Action {
                 return action.isFinished();
             }
 
-            public void end(){
+            public void end(boolean interrupted){
                 action.onStop();
+            }
+
+            public Set<Subsystem> getRequirements(){
+                return new HashSet<Subsystem>();
             }
         };
     }

@@ -13,7 +13,6 @@ public class ManualSpin extends Action{
 
     @Override
     public void onStart() {
-        System.out.println("spinny with power " + speed);
         Spinny.getInstance().updateManualSpin(speed);
 
     }

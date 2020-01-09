@@ -71,6 +71,7 @@ public class Spinny extends Subsystem {
                                 periodicIO.deployColor = false;
                                 periodicIO.activeColor = null;
                             }
+                            break;
 
                         case AUTO_SPIN:
                             updateEncoding();
@@ -121,7 +122,10 @@ public class Spinny extends Subsystem {
 
     @Override
     public synchronized void readPeriodicInputs() {
-        periodicIO.sensedColors = new double [] {0.0,0.0,0.0};//colorSensor.getColor();
+        periodicIO.sensedColors = colorSensor.getColor();
+        periodicIO.red = periodicIO.sensedColors[0];
+        periodicIO.green = periodicIO.sensedColors[1];
+        periodicIO.blue = periodicIO.sensedColors[2];
     }
 
     @Override
@@ -272,6 +276,7 @@ public class Spinny extends Subsystem {
         // INPUTS
         public String activeTargetColor = null; // The color we need to see to have the correct color showing on the sensor
         public double[] sensedColors = {0, 0, 0}; // The input we get from the sensor
+        public double red = 0, green = 0, blue = 0;
 
         public double spin_velocity = 0.0;
         public double spin_distance = 0.0; // How much we've spun the wheel recently

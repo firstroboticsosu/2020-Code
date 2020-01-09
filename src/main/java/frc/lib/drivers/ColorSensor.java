@@ -39,7 +39,6 @@ public class ColorSensor{
 
 
     private I2C colorI2c;
-    private byte[] read_data;
     private int address;
     
     public ColorSensor(int address){
@@ -58,11 +57,12 @@ public class ColorSensor{
     public void reset(){
         if(colorI2c != null) colorI2c.close();
         colorI2c = new I2C(I2C.Port.kOnboard, address);
-        if(colorI2c.addressOnly()) DriverStation.reportError("Could not init color sensor at address " + address, false);
-        else{
-            colorI2c.write(ENABLE, 0b00010011); // write Abient color sensing on, adc enable and power on for timer enable
-            colorI2c.write(CONFIG, 0x00); //configure WLONG off to read fast
-        }
+        //if(colorI2c.addressOnly()) DriverStation.reportError("Could not init color sensor at address " + address, false);
+        byte [] data = new byte[1];
+        colorI2c.read(ID, 1, data);
+        System.out.println("Color sensor ID: " + data[0]);
+        colorI2c.write(ENABLE, 0b00000011); // write Abient color sensing on, adc enable and power on for timer enable
+        colorI2c.write(CONFIG, 0x00); //configure WLONG off to read fast
     }
 
     /**
@@ -71,6 +71,7 @@ public class ColorSensor{
      */
     public double[] getColor(){
         double[] out = new double[3];
+        byte[] read_data = new byte[2];
         colorI2c.read(RDATAL, 2, read_data);
         if(read_data.length > 1){
             out[0] = (read_data[1] << 8 | read_data[0]) / (double)0xffff;

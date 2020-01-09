@@ -3,17 +3,18 @@ package frc.robot.actions.ramp;
 import frc.lib.statemachine.Action;
 import frc.robot.subsystems.Ramp;
 
-public class Roller extends Action {
+public class Intake extends Action {
 
-    boolean wantDown;
+    double power;
 
-    public Roller(boolean wantDown) {
-        this.wantDown = wantDown;
+    public Intake(double power) {
+        this.power = power;
     }
 
     @Override
     public void onStart() {
-        Ramp.getInstance().setRoller(wantDown);
+        System.out.println("spinning roller");
+        Ramp.getInstance().spin(power);
     }
 
     @Override
@@ -23,11 +24,11 @@ public class Roller extends Action {
 
     @Override
     public boolean isFinished() {
-        return true;
+        return false;
     }
 
     @Override
     public void onStop() {
-
+        Ramp.getInstance().stopSpinning();
     }
 }

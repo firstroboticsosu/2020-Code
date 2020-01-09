@@ -15,13 +15,13 @@ public class Constants {
     public static final int DRIVE_FRONT_RIGHT_ID = 2;
     public static final int DRIVE_BACK_RIGHT_ID = 4;
     public static final int SPINNY_ID = 5;
+    public static final int LIFT_ROLLER_ID = 6;
+    public static final int LIFT_WINCH_ID = 10;
     public static final int RAMP_ID = 9;
 
     //solenoid assignments
     public static final int FLAP_PISTON_FORWARD_ID = 0; //TODO pick these
     public static final int FLAP_PISTON_REVERSE_ID = 1;
-    public static final int COLLECTOR_FORWARD_ID = 2;
-    public static final int COLLECTOR_REVERSE_ID = 3;
     public static final int COLOR_OUT_ID = 4;
     public static final int COLOR_IN_ID = 5;
 
@@ -93,7 +93,7 @@ public class Constants {
     public static final double SPINNY_KS = 0.50;
 
     public static final double SPINNY_MANUAL_FORWARD = 0.5;
-    public static final double SPINNY_MANUAL_BACKWARD = 0.5;
+    public static final double SPINNY_MANUAL_BACKWARD = -0.5;
     public static final double AUTO_COLOR_FORWARD_SPEED = 0;
 	public static final double AUTO_COLOR_BACKWARD_SPEED = 0;
 
@@ -124,8 +124,8 @@ public class Constants {
 
     public static final double RAMP_VCOMP = 11.0; //V                11.0
 
-    public static final double LOWER_RAMP_UP_SPEED = .7;
-    public static final double LOWER_RAMP_DOWN_SPEED = -.7;
+    public static final double LOWER_RAMP_UP_SPEED = .2;
+    public static final double LOWER_RAMP_DOWN_SPEED = -.2;
 
     /**
      * General Configuration --------------------------------------

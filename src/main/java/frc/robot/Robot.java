@@ -16,9 +16,9 @@ import frc.lib.loops.Looper;
 import frc.lib.statemachine.Action;
 import frc.lib.statemachine.StateMachine;
 import frc.lib.util.VersionData;
+import frc.robot.actions.ClimbAction;
 import frc.robot.actions.ramp.Door;
-import frc.robot.actions.ramp.Roller;
-import frc.robot.actions.ramp.Spin;
+import frc.robot.actions.ramp.Intake;
 import frc.robot.actions.spinny.AutoColor;
 import frc.robot.actions.spinny.ManualSpin;
 import frc.robot.statemachines.TestMach;
@@ -32,7 +32,7 @@ import frc.robot.subsystems.*;
 public class Robot extends TimedRobot {
 
     JoystickButton spinLeft, spinRight, openDoor, closeDoor,
-     deployRoller, retractRoller, deployColor, retractColor, intakeForward,
+     climb, retractRoller, RunFast, retractColor, intakeForward,
      intakeBackward, autoColor;
 
     SubsystemManager manager;
@@ -45,7 +45,8 @@ public class Robot extends TimedRobot {
             PoseEstimator.getInstance(),
             Drive.getInstance(),
             Spinny.getInstance(),
-            Ramp.getInstance()
+            Ramp.getInstance(),
+            Climb.getInstance()
             ), true);
 
         //Create instance of loopers for enabled and disabled modes
@@ -158,26 +159,27 @@ public class Robot extends TimedRobot {
         spinRight.whileHeld(Action.toCommand2(new ManualSpin(Constants.SPINNY_MANUAL_BACKWARD)));
 
         openDoor = new JoystickButton(Constants.MASTER, 3);
-        openDoor.whileHeld(Action.toCommand2(new Door(false)));
+        openDoor.whenPressed(Action.toCommand2(new Door(false)));
 
         closeDoor = new JoystickButton(Constants.MASTER, 4);
-        closeDoor.whileHeld(Action.toCommand2(new Door(true)));
+        closeDoor.whenPressed(Action.toCommand2(new Door(true)));
 
-        deployRoller = new JoystickButton(Constants.MASTER, 5);
-        deployRoller.whileHeld(Action.toCommand2(new Roller(true)));
+        climb = new JoystickButton(Constants.MASTER, 5);
+        climb.whileHeld(Action.toCommand2(new ClimbAction()));
 
         retractRoller = new JoystickButton(Constants.MASTER, 6);
-        retractRoller.whileHeld(Action.toCommand2(new Roller(false)));
+        //retractRoller.whenPressed(Action.toCommand2(new Roller(false)));
 
-        deployColor = new JoystickButton(Constants.MASTER, 7);
+        RunFast = new JoystickButton(Constants.MASTER, 7);
+        RunFast.whileHeld(Action.toCommand2(new Intake(0.4)));
 
         retractColor = new JoystickButton(Constants.MASTER, 8);
 
         intakeForward = new JoystickButton(Constants.MASTER, 9);
-        intakeForward.whileHeld(Action.toCommand2(new Spin(true)));
+        intakeForward.whileHeld(Action.toCommand2(new Intake(Constants.LOWER_RAMP_UP_SPEED)));
 
         intakeBackward = new JoystickButton(Constants.MASTER, 10);
-        intakeBackward.whileHeld(Action.toCommand2(new Spin(false)));
+        intakeBackward.whileHeld(Action.toCommand2(new Intake(Constants.LOWER_RAMP_DOWN_SPEED)));
 
         autoColor = new JoystickButton(Constants.MASTER, 11);
         autoColor.whileHeld(Action.toCommand2(new AutoColor()));

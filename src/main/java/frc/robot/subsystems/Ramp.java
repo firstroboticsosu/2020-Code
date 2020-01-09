@@ -24,7 +24,6 @@ public class Ramp extends Subsystem {
     // Hardware
     private CANSparkMax lowerRampMotor;
     private DoubleSolenoid flapPiston;
-    private DoubleSolenoid collectorPiston;
 
     public void registerEnabledLoops(ILooper enabledLooper) {
         enabledLooper.register(new Loop() {
@@ -54,13 +53,11 @@ public class Ramp extends Subsystem {
     public synchronized void writePeriodicOutputs() {
         lowerRampMotor.set(periodicIO.lower_ramp_demand);
         flapPiston.set(periodicIO.flap_closed ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
-        collectorPiston.set(periodicIO.collector_down ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
     }
 
     private Ramp() {
         lowerRampMotor = new CANSparkMax(Constants.RAMP_ID, MotorType.kBrushless);
         flapPiston = new DoubleSolenoid(Constants.FLAP_PISTON_FORWARD_ID, Constants.FLAP_PISTON_REVERSE_ID);
-        collectorPiston = new DoubleSolenoid(Constants.COLLECTOR_FORWARD_ID, Constants.COLLECTOR_REVERSE_ID);
         configTalons();
         reset();
     }
@@ -69,20 +66,19 @@ public class Ramp extends Subsystem {
     public void reset() {
         periodicIO = new Ramp.RampIO();
         flapPiston.set(DoubleSolenoid.Value.kOff);
-        collectorPiston.set(DoubleSolenoid.Value.kOff);
     }
 
     private void configTalons() {
-        lowerRampMotor.restoreFactoryDefaults();
-        CANPIDController m_pidController = lowerRampMotor.getPIDController();
+        //lowerRampMotor.restoreFactoryDefaults();
+        //CANPIDController m_pidController = lowerRampMotor.getPIDController();
 
         // set PID coefficients
-        m_pidController.setP(Constants.LOWER_RAMP_KP);
-        m_pidController.setI(Constants.LOWER_RAMP_KI);
-        m_pidController.setD(Constants.LOWER_RAMP_KD);
-        m_pidController.setIZone(Constants.LOWER_RAMP_KIZ);
-        m_pidController.setFF(Constants.LOWER_RAMP_KFF);
-        m_pidController.setOutputRange(Constants.kMinOutput, Constants.kMaxOutput);
+        // m_pidController.setP(Constants.LOWER_RAMP_KP);
+        // m_pidController.setI(Constants.LOWER_RAMP_KI);
+        // m_pidController.setD(Constants.LOWER_RAMP_KD);
+        // m_pidController.setIZone(Constants.LOWER_RAMP_KIZ);
+        // m_pidController.setFF(Constants.LOWER_RAMP_KFF);
+        // m_pidController.setOutputRange(Constants.kMinOutput, Constants.kMaxOutput);
     }
 
     @Override
@@ -105,20 +101,15 @@ public class Ramp extends Subsystem {
         // Set desired output values
         public double lower_ramp_demand = 0.0;
         public boolean flap_closed = true;
-        public boolean collector_down = false;
     }
 
-    public void spin(boolean forwards) {
-        periodicIO.lower_ramp_demand = forwards ? Constants.LOWER_RAMP_UP_SPEED : Constants.LOWER_RAMP_DOWN_SPEED;
+    public void spin(double power) {
+        periodicIO.lower_ramp_demand = power;
     }
     public void stopSpinning() {
         periodicIO.lower_ramp_demand = 0;
     }
-
-    public void setRoller(boolean wantDown) {
-        periodicIO.collector_down = wantDown;
-    }
-
+    
     public void setDoor(boolean wantClosed) {
         periodicIO.flap_closed = wantClosed;
     }
