@@ -22,6 +22,6 @@ public class AutoColor extends Action {
 
     @Override
     public void onStop() {
-        Spinny.getInstance().endAutoColor();
+        Spinny.getInstance().deactivate();
     }
 }

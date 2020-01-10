@@ -79,6 +79,7 @@ public class Robot extends TimedRobot {
         //reset any subsystems
         //not normally neccessary for most systems
         Spinny.getInstance().reset();
+        Ramp.getInstance().reset();
 
         //start new looper
         disabledLooper.start();
@@ -150,7 +151,6 @@ public class Robot extends TimedRobot {
 
     }
 
-    //TODO make these global? seems to be yes
     public void initButtons(){
         spinLeft = new JoystickButton(Constants.MASTER, 1);
         spinLeft.whileHeld(Action.toCommand2(new ManualSpin(Constants.SPINNY_MANUAL_FORWARD)));

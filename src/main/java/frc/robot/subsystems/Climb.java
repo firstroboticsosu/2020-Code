@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -39,22 +40,24 @@ public class Climb extends Subsystem{
 	}
 
 	@Override
-	public void outputTelemetry() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void outputTelemetry() {		}
 
 	@Override
 	public void reset() {
 		periodicIO = new ClimbIO();
 		
-	}
+    }
+    
+    private void configMotors(){
+        //config Talon
+        roller.setInverted(false);
+        roller.setNeutralMode(NeutralMode.Brake);
+
+        //config Spark Max
+    }
 
 	@Override
-	public void onStop() {
-		// TODO Auto-generated method stub
-		
-    }
+	public void onStop() {	}
 
     public void setRoller(double power){
         periodicIO.rollerDemand = power;

@@ -4,6 +4,7 @@ import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -17,7 +18,6 @@ import frc.lib.motion.MotionProfileConstraints;
 import frc.lib.motion.MotionProfileGoal;
 import frc.lib.motion.MotionState;
 import frc.lib.motion.ProfileFollower;
-import frc.lib.motion.SetpointGenerator;
 import frc.robot.Constants;
 
 import java.util.ArrayList;
@@ -67,7 +67,7 @@ public class Spinny extends Subsystem {
                             if (timestamp - periodicIO.startTimestamp >= Constants.INACTIVE_ENCODING_STATE_TIME) {
                                 // Move to INACTIVE state
                                 mSpinnyControlState = SpinnyControlState.INACTIVE;
-                                periodicIO.spin_distance = 0.0;
+                                periodicIO.observed_rotation = 0.0;
                                 periodicIO.deployColor = false;
                                 periodicIO.activeColor = null;
                             }
@@ -101,36 +101,22 @@ public class Spinny extends Subsystem {
         });
     }
 
-    private void initInactiveEncodingState() {
-        periodicIO.startTimestamp = Timer.getFPGATimestamp();
-        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
-        periodicIO.spin_demand = 0; // Just to make sure
-    }
-
-    private void updateEncoding() {
-        periodicIO.deployColor = true; // If we're updating encoding we'll want to have this deployed
-        double[] rawColorData = periodicIO.sensedColors;
-        int[] colorData = {(int) (255*rawColorData[0]), (int) (255*rawColorData[1]), (int) (255*rawColorData[2])};
-        String color = resolveToColor(colorData);
-        if (color != null && !color.equals(periodicIO.activeColor)) {
-            if (periodicIO.activeColor != null) {
-                periodicIO.spin_distance += 0.125;
-            }
-            periodicIO.activeColor = color;
-        }
-    }
-
     @Override
     public synchronized void readPeriodicInputs() {
         periodicIO.sensedColors = colorSensor.getColor();
         periodicIO.red = periodicIO.sensedColors[0];
         periodicIO.green = periodicIO.sensedColors[1];
         periodicIO.blue = periodicIO.sensedColors[2];
+        periodicIO.encoder_distance = spinMotor.getSelectedSensorPosition();
     }
 
     @Override
     public synchronized void writePeriodicOutputs() {
-        spinMotor.set(ControlMode.PercentOutput, periodicIO.spin_demand);
+        if(mSpinnyControlState != SpinnyControlState.AUTO_SPIN || mSpinnyControlState != SpinnyControlState.AUTO_COLOR){
+            spinMotor.set(ControlMode.Velocity, periodicIO.spin_demand);
+        } else {
+            spinMotor.set(ControlMode.PercentOutput, periodicIO.spin_demand);
+        }
         deployPistonSolenoid.set(periodicIO.deployColor ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
     }
 
@@ -149,6 +135,9 @@ public class Spinny extends Subsystem {
     public void reset() {
         periodicIO = new Spinny.SpinnyIO();
         velocityFollower.setConstraints(motionConstraints);
+        velocityFollower.resetIntegral();
+        velocityFollower.resetProfile();
+        velocityFollower.resetSetpoint();
         resetSensors();
         abort();
     }
@@ -158,10 +147,32 @@ public class Spinny extends Subsystem {
         spinMotor.setSelectedSensorPosition(0, 0, 0);
     }
 
+    private void initInactiveEncodingState() {
+        periodicIO.startTimestamp = Timer.getFPGATimestamp();
+        mSpinnyControlState = SpinnyControlState.INACTIVE_ENCODING;
+        periodicIO.spin_demand = 0; // Just to make sure
+    }
+
+    private void updateEncoding() {
+        //want piston deployed if the color is being read
+        periodicIO.deployColor = true; 
+        int[] colorData = {(int) (255*periodicIO.sensedColors[0]),
+            (int) (255*periodicIO.sensedColors[1]), (int) (255*periodicIO.sensedColors[2])};
+        //resolve data to a color string
+        String color = resolveToColor(colorData);
+
+        //if the color has changed, update the observed spin distance
+        if (color != null && !color.equals(periodicIO.activeColor)) {
+            if (periodicIO.activeColor != null) {
+                periodicIO.observed_rotation += 0.125; // quarter of a rotation
+            }
+            periodicIO.activeColor = color;
+        }
+    }
+
     public void initAutoColor() {
         String targetColor = DriverStation.getInstance().getGameSpecificMessage();
-        if (!spinnerColors.contains(targetColor))
-            return;
+        if (!spinnerColors.contains(targetColor)) return;
         periodicIO.activeTargetColor = spinnerColors.get((spinnerColors.indexOf(targetColor) + 2) % 4);
         mSpinnyControlState = SpinnyControlState.AUTO_COLOR;
     }
@@ -174,8 +185,8 @@ public class Spinny extends Subsystem {
                 periodicIO.activeTargetColor = null;
                 initInactiveEncodingState();
             }
-            // If the target is counter-clockwise one step
-            else if (spinnerColors.indexOf(periodicIO.activeColor) == spinnerColors.indexOf(periodicIO.activeTargetColor) - 1) {
+            // If the target is counter-clockwise one or two steps
+            else if (spinnerColors.indexOf(periodicIO.activeColor) < spinnerColors.indexOf(periodicIO.activeTargetColor)) {
                 periodicIO.spin_demand = Constants.AUTO_COLOR_BACKWARD_SPEED;
             }
             // If the target is clockwise one or two steps
@@ -185,29 +196,44 @@ public class Spinny extends Subsystem {
         }
     }
 
-    public void initAutoSpin(){
+    private void initFancyAutoColor(){
+        //get the color from the FMS
+        String targetColor = DriverStation.getInstance().getGameSpecificMessage();
+        if (!spinnerColors.contains(targetColor)) return;
+        periodicIO.activeTargetColor = spinnerColors.get((spinnerColors.indexOf(targetColor) + 2) % 4);
+
         if (mSpinnyControlState != SpinnyControlState.AUTO_SPIN) {
-            spinMotor.selectProfileSlot(0, 0);
-            
+            spinMotor.set(ControlMode.Velocity, 0);         
         }
         velocityFollower.resetIntegral();
         velocityFollower.resetProfile();
-        velocityFollower.setGoal(new MotionProfileGoal(30 * Math.PI));
+        velocityFollower.resetSetpoint();
+        velocityFollower.setGoal(new MotionProfileGoal(30 * Math.PI * 3)); // rotate the wheel n inches to the desired color
+    
+        mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
+    }
+
+    public void initAutoSpin(){
+        if (mSpinnyControlState != SpinnyControlState.AUTO_SPIN) {
+            spinMotor.set(ControlMode.Velocity, 0);         
+        }
+        velocityFollower.resetIntegral();
+        velocityFollower.resetProfile();
+        velocityFollower.resetSetpoint();
+        velocityFollower.setGoal(new MotionProfileGoal(30 * Math.PI * 3)); // rotate the wheel 3 rotations (30 in diameter and the result is the arc length)
         mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
     }
 
     private void updateAutoSpin(double timestamp){
-        final MotionState cur_state = new MotionState(timestamp, periodicIO.spin_distance,
-         ticksPer100msToUnitsPerSecond(periodicIO.spin_velocity), 0.0);
-        periodicIO.spin_demand = velocityFollower.update(cur_state, timestamp);
+        //create the new motion state of the system
+        final MotionState cur_state = new MotionState(timestamp, ticksToInches(periodicIO.encoder_distance),
+         ticksPer100msToInPerSecond(periodicIO.encoder_velocity), 0.0);
+        //calculate the next update to the velocity
+        periodicIO.spin_demand = inchesPerSecondToTicksPer100ms(velocityFollower.update(cur_state, timestamp));
     }
 
     public boolean autoSpinComplete(){
         return velocityFollower.onTarget();
-    }
-
-    public void endAutoColor() {
-        initInactiveEncodingState();
     }
 
     public void updateManualSpin(double speed){
@@ -238,8 +264,9 @@ public class Spinny extends Subsystem {
         ErrorCode sensorPresent;
         sensorPresent = spinMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 100); //primary closed-loop, 100 ms timeout
         if (sensorPresent != ErrorCode.OK) {
-            DriverStation.reportError("Could not detect left encoder: " + sensorPresent, false);
+            DriverStation.reportError("Could not detect spinner encoder: " + sensorPresent, false);
         }
+        spinMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 5, 100);
         spinMotor.setSensorPhase(true);
         spinMotor.setInverted(false);
         spinMotor.setNeutralMode(NeutralMode.Coast);
@@ -278,8 +305,9 @@ public class Spinny extends Subsystem {
         public double[] sensedColors = {0, 0, 0}; // The input we get from the sensor
         public double red = 0, green = 0, blue = 0;
 
-        public double spin_velocity = 0.0;
-        public double spin_distance = 0.0; // How much we've spun the wheel recently
+        public double observed_rotation = 0.0; // How much we've spun the wheel recently
+        public double encoder_velocity = 0.0;
+        public double encoder_distance = 0.0;
 
         // OUTPUTS
         // Internal counters
@@ -329,54 +357,26 @@ public class Spinny extends Subsystem {
     }
 
     private static double compliantRotationToWheelRotation(double rotations) {
-        return rotations * 32 / 3;
+        return rotations * 30 / 3;
     }
 
     private static double wheelRotationToCompliantRotation(double rotations) {
-        return rotations * 3 / 32;
+        return rotations * 3 / 30;
     }
 
-    private static double rotationsToInches(double rotations) {
-        return rotations * Math.PI * Constants.SPINNY_WHEEL_DIAMETER;
+    private double ticksPer100msToInPerSecond(double ticks_per_100ms) {
+        return ticksToInches(ticks_per_100ms) * 10.0;
     }
 
-    private static double rpmToInchesPerSecond(double rpm) {
-        return rotationsToInches(rpm) / 60;
+    private double inchesPerSecondToTicksPer100ms(double inches_per_second) {
+        return inchesToTicks(inches_per_second) / 10.0;
     }
 
-    private static double inchesToRotations(double inches) {
-        return inches / (Math.PI * Constants.DRIVE_WHEEL_DIAMETER_INCHES);
+    private double inchesToTicks(double inches) {
+        return inches * Math.PI * Constants.SPINNY_WHEEL_DIAMETER;
     }
 
-    private static double inchesPerSecondToRpm(double inches_per_second) {
-        return inchesToRotations(inches_per_second) * 60;
-    }
-
-    private static double radiansPerSecondToTicksPer100ms(double rad_s) {
-        return rad_s / (Math.PI * 2.0) * 4096.0 / 10.0;
-    }
-
-    private static double inchesPerSecondToRadiansPerSecond(double in_sec) {
-        return in_sec / (Constants.SPINNY_WHEEL_DIAMETER * Math.PI) * 2 * Math.PI;
-    }
-
-    private static double rpmToTicksPer100ms(double rpm) {
-        return ((rpm * 512.0) / 75.0);
-    }
-
-    private double ticksPer100msToUnitsPerSecond(double ticks_per_100ms) {
-        return ticksToUnits(ticks_per_100ms) * 10.0;
-    }
-
-    private double unitsPerSecondToTicksPer100ms(double units_per_second) {
-        return unitsToTicks(units_per_second) / 10.0;
-    }
-
-    private double unitsToTicks(double units) {
-        return units * Math.PI * Constants.SPINNY_WHEEL_DIAMETER;
-    }
-
-    protected double ticksToUnits(double ticks) {
+    protected double ticksToInches(double ticks) {
         return ticks / (Math.PI * Constants.SPINNY_WHEEL_DIAMETER);
     }
 

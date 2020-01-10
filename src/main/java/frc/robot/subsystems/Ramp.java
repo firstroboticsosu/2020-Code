@@ -58,7 +58,7 @@ public class Ramp extends Subsystem {
     private Ramp() {
         lowerRampMotor = new CANSparkMax(Constants.RAMP_ID, MotorType.kBrushless);
         flapPiston = new DoubleSolenoid(Constants.FLAP_PISTON_FORWARD_ID, Constants.FLAP_PISTON_REVERSE_ID);
-        configTalons();
+        configSparkMax();
         reset();
     }
 
@@ -68,17 +68,8 @@ public class Ramp extends Subsystem {
         flapPiston.set(DoubleSolenoid.Value.kOff);
     }
 
-    private void configTalons() {
-        //lowerRampMotor.restoreFactoryDefaults();
-        //CANPIDController m_pidController = lowerRampMotor.getPIDController();
-
-        // set PID coefficients
-        // m_pidController.setP(Constants.LOWER_RAMP_KP);
-        // m_pidController.setI(Constants.LOWER_RAMP_KI);
-        // m_pidController.setD(Constants.LOWER_RAMP_KD);
-        // m_pidController.setIZone(Constants.LOWER_RAMP_KIZ);
-        // m_pidController.setFF(Constants.LOWER_RAMP_KFF);
-        // m_pidController.setOutputRange(Constants.kMinOutput, Constants.kMaxOutput);
+    private void configSparkMax() {
+        //TODO figure out how to clear errors with spark max on CANbus
     }
 
     @Override

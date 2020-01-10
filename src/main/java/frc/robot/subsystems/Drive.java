@@ -127,8 +127,8 @@ public class Drive extends Subsystem {
 
         periodicIO.left_voltage = driveFrontLeft.getMotorOutputVoltage();
         periodicIO.right_voltage = driveFrontRight.getMotorOutputVoltage();
-        periodicIO.left_current = driveFrontLeft.getOutputCurrent(); //TODO investigate possible EMI noise
-        periodicIO.right_current = driveFrontRight.getOutputCurrent(); //TODO investigate possible EMI noise
+        periodicIO.left_current = driveFrontLeft.getStatorCurrent(); //TODO investigate possible EMI noise
+        periodicIO.right_current = driveFrontRight.getStatorCurrent(); //TODO investigate possible EMI noise
     }
 
     @Override
