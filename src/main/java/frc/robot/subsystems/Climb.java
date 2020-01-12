@@ -3,15 +3,14 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import edu.wpi.first.wpilibj.Spark;
 import frc.robot.Constants;
 
  
 public class Climb extends Subsystem{
 
     private TalonSRX roller;
-    private CANSparkMax winch;
+    private Spark winch;
     private ClimbIO periodicIO;
 
     private static final Climb instance = new Climb();
@@ -22,7 +21,7 @@ public class Climb extends Subsystem{
 
     private Climb(){
         roller = new TalonSRX(Constants.LIFT_ROLLER_ID);
-        winch = new CANSparkMax(Constants.LIFT_WINCH_ID, MotorType.kBrushless);   
+        winch = new Spark(Constants.LIFT_WINCH_ID);
         reset();
     }
 
@@ -45,7 +44,6 @@ public class Climb extends Subsystem{
 	@Override
 	public void reset() {
 		periodicIO = new ClimbIO();
-		
     }
     
     private void configMotors(){
@@ -53,7 +51,6 @@ public class Climb extends Subsystem{
         roller.setInverted(false);
         roller.setNeutralMode(NeutralMode.Brake);
 
-        //config Spark Max
     }
 
 	@Override

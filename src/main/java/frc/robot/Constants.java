@@ -16,8 +16,10 @@ public class Constants {
     public static final int DRIVE_BACK_RIGHT_ID = 4;
     public static final int SPINNY_ID = 5;
     public static final int LIFT_ROLLER_ID = 6;
-    public static final int LIFT_WINCH_ID = 10;
     public static final int RAMP_ID = 9;
+
+    //PWM ports
+    public static final int LIFT_WINCH_ID = 10;
 
     //solenoid assignments
     public static final int FLAP_PISTON_FORWARD_ID = 0; //TODO pick these
