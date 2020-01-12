@@ -19,7 +19,7 @@ public class Constants {
     public static final int RAMP_ID = 9;
 
     //PWM ports
-    public static final int LIFT_WINCH_ID = 10;
+    public static final int LIFT_WINCH_ID = 1;
 
     //solenoid assignments
     public static final int FLAP_PISTON_FORWARD_ID = 0; //TODO pick these
