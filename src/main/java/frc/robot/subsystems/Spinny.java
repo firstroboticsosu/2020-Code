@@ -112,9 +112,10 @@ public class Spinny extends Subsystem {
 
     @Override
     public synchronized void writePeriodicOutputs() {
-        if(mSpinnyControlState != SpinnyControlState.AUTO_SPIN || mSpinnyControlState != SpinnyControlState.AUTO_COLOR){
+        if(mSpinnyControlState == SpinnyControlState.AUTO_SPIN || mSpinnyControlState == SpinnyControlState.AUTO_COLOR){
             spinMotor.set(ControlMode.Velocity, periodicIO.spin_demand);
         } else {
+            //System.out.println("percent output " + periodicIO.spin_demand);
             spinMotor.set(ControlMode.PercentOutput, periodicIO.spin_demand);
         }
         deployPistonSolenoid.set(periodicIO.deployColor ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
@@ -185,8 +186,9 @@ public class Spinny extends Subsystem {
                 periodicIO.activeTargetColor = null;
                 initInactiveEncodingState();
             }
-            // If the target is counter-clockwise one or two steps
-            else if (spinnerColors.indexOf(periodicIO.activeColor) < spinnerColors.indexOf(periodicIO.activeTargetColor)) {
+            // If the target is counter-clockwise one step
+            // Take the current target color index, add 4, look back 1 and mod by 4 to get back to an array index
+            else if (spinnerColors.indexOf(periodicIO.activeColor) == (spinnerColors.indexOf(periodicIO.activeTargetColor) + 3 ) % 4) {
                 periodicIO.spin_demand = Constants.AUTO_COLOR_BACKWARD_SPEED;
             }
             // If the target is clockwise one or two steps
@@ -202,13 +204,21 @@ public class Spinny extends Subsystem {
         if (!spinnerColors.contains(targetColor)) return;
         periodicIO.activeTargetColor = spinnerColors.get((spinnerColors.indexOf(targetColor) + 2) % 4);
 
+        //make sure motor control is velocity mode
         if (mSpinnyControlState != SpinnyControlState.AUTO_SPIN) {
             spinMotor.set(ControlMode.Velocity, 0);         
         }
+
+        //reste the motion profile to the starting state 
         velocityFollower.resetIntegral();
         velocityFollower.resetProfile();
         velocityFollower.resetSetpoint();
-        velocityFollower.setGoal(new MotionProfileGoal(30 * Math.PI * 3)); // rotate the wheel n inches to the desired color
+
+        //select the new goal
+        final double distance = spinnerColors.indexOf(periodicIO.activeColor) - 
+            (spinnerColors.indexOf(periodicIO.activeTargetColor) + 3 ) % 4 * 0.125 * 30 * Math.PI;
+
+        velocityFollower.setGoal(new MotionProfileGoal(distance)); 
     
         mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
     }
@@ -220,7 +230,9 @@ public class Spinny extends Subsystem {
         velocityFollower.resetIntegral();
         velocityFollower.resetProfile();
         velocityFollower.resetSetpoint();
-        velocityFollower.setGoal(new MotionProfileGoal(30 * Math.PI * 3)); // rotate the wheel 3 rotations (30 in diameter and the result is the arc length)
+
+        velocityFollower.setGoal(new MotionProfileGoal(30 * Math.PI * 3)); // rotate the wheel 3 rotations to the desired color
+        
         mSpinnyControlState = SpinnyControlState.AUTO_SPIN;
     }
 

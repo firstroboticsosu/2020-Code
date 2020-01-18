@@ -52,7 +52,7 @@ public class Ramp extends Subsystem {
     @Override
     public synchronized void writePeriodicOutputs() {
         lowerRampMotor.set(periodicIO.lower_ramp_demand);
-        flapPiston.set(periodicIO.flap_closed ? DoubleSolenoid.Value.kReverse : DoubleSolenoid.Value.kForward);
+        flapPiston.set(periodicIO.flap_closed ? DoubleSolenoid.Value.kForward : DoubleSolenoid.Value.kReverse);
     }
 
     private Ramp() {
