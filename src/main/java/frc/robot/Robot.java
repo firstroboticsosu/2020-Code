@@ -8,6 +8,7 @@
 package frc.robot;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
@@ -15,6 +16,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.lib.control.Path;
 
 /**
  * This is a demo program showing the use of the RobotDrive class, specifically
@@ -26,6 +28,8 @@ public class Robot extends TimedRobot {
 
 	private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
+
+  private Path bottomPath = new Path(Arrays.asList(new Path.Waypoint(position, speed)));
   
   @Override
   public void robotInit() {

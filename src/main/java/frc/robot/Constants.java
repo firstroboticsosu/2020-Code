@@ -2,7 +2,7 @@ package frc.robot;
 
 class Constants
 {//file for all of our constants, more stuff could be moved here
-	public static double kSensorUnitsPerMeter = 8459.75*(1.0/3.28084);//ticks per meter converted to ft because PathPlanner is only in ft
+	public static double kSensorUnitsPerMeter = 8459.75;//ticks per meter
 	//data: 8438, 8493, 8475, 8433
 	//determined by experimentation, could be determinded mathematically I guess
 	public static int kPrimaryPIDSlot = 0;
