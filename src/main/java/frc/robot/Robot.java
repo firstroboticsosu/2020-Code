@@ -41,7 +41,7 @@ public class Robot extends TimedRobot {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-    m_chooser.setDefaultOption("Dead Reckon Forward", Constants.kDefaultAuto);
+    m_chooser.setDefaultOption("Dead Reckon Forward", Constants.kDefaultAuto);//add the auto options to
     m_chooser.addOption("Bottom", Constants.kBottom);
     m_chooser.addOption("Middle", Constants.kMiddle);
     SmartDashboard.putData("Auto choices", m_chooser);

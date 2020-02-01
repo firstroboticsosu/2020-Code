@@ -23,4 +23,8 @@ class Constants
 	public static final int MECH_CLIMBER_TALON_ID = 6;
 	public static final int MECH_HARVY_SPARK_ID = 9;
 	public static final int MECH_HARVY_CLIMBER_ID = 10;
+	public static final int MECH_SOLENOID_DOOR_FORWARD_ID = 0;
+	public static final int MECH_SOLENOID_DOOR_BACKWARD_ID = 1;
+	public static final int MECH_SOLENOID_COLOR_FORWARD_ID = 4;
+	public static final int MECH_SOLENOID_COLOR_BACKWARD_ID = 5;
 }

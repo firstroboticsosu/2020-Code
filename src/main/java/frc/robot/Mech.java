@@ -4,7 +4,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -19,8 +19,8 @@ import frc.robot.Sensors.MyColor;
 
 public class Mech//hold  the motors and relevant code for the contorl of those motors 
 {
-    static WPI_TalonSRX spinnderTalon;//5, all the objects holding the various mech actuators
-    static WPI_TalonSRX climbRollerTalon;//6
+    static TalonSRX spinnderTalon;//5, all the objects holding the various mech actuators
+    static TalonSRX climbRollerTalon;//6
     static CANSparkMax harvySpark;
     static CANSparkMax climberSpark;
     static DoubleSolenoid doorPiston;
@@ -28,24 +28,24 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
     static Compressor compressor;
     static Timer spinUpTimer;
     static Timer spinDownTimer;
-    static int encOffsetFor3spin = 0;//tells us if we have reset 
+    static int encOffsetFor3spin = 0;//tells us if we have reset the encoder for the 4 spins of the control panel
     static void init()
     {
-        spinnderTalon = new WPI_TalonSRX(Constants.MECH_SPINNER_TALON_ID);
-        climbRollerTalon = new WPI_TalonSRX(Constants.MECH_CLIMBER_TALON_ID);
+        spinnderTalon = new TalonSRX(Constants.MECH_SPINNER_TALON_ID);//inititalize all the actuators to constant ids
+        climbRollerTalon = new TalonSRX(Constants.MECH_CLIMBER_TALON_ID);
         harvySpark = new CANSparkMax(Constants.MECH_HARVY_SPARK_ID, MotorType.kBrushless);
         climberSpark = new CANSparkMax(Constants.MECH_HARVY_CLIMBER_ID, MotorType.kBrushless);
         compressor = new Compressor();
-        doorPiston = new DoubleSolenoid(0, 1);
-        colorSensorPiston = new DoubleSolenoid(4, 5);
-        spinUpTimer = new Timer();
+        doorPiston = new DoubleSolenoid(Constants.MECH_SOLENOID_DOOR_FORWARD_ID, Constants.MECH_SOLENOID_DOOR_BACKWARD_ID);
+        colorSensorPiston = new DoubleSolenoid(Constants.MECH_SOLENOID_COLOR_FORWARD_ID, Constants.MECH_SOLENOID_COLOR_BACKWARD_ID);
+        spinUpTimer = new Timer();//setup the timers for the color sensor piston
         spinDownTimer = new Timer();
 
-        spinnderTalon.configSelectedFeedbackSensor(FeedbackDevice.PulseWidthEncodedPosition, 0, 10);
+        spinnderTalon.configSelectedFeedbackSensor(FeedbackDevice.PulseWidthEncodedPosition, 0, 10);//setup the spinner talon
         spinnderTalon.setNeutralMode(NeutralMode.Brake);
         spinnderTalon.setSensorPhase(true);
 
-        climberSpark.setIdleMode(IdleMode.kBrake);
+        climberSpark.setIdleMode(IdleMode.kBrake);//make the climber brake
         
         resetActuators();
     }
@@ -64,15 +64,15 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
         {
             harvySpark.set(0);
         }*/
-        if(stick.getRawButton(2))
+        if(stick.getRawButton(2))//everrything here just runs motors based on buttons and axis. nothing special
         {
-            harvySpark.set(stick.getRawAxis(1)/2);
+            harvySpark.set(stick.getRawAxis(1)/2);//turbo mode if ball stuck
         }
         else
         {
             harvySpark.set(stick.getRawAxis(1)/5);
         }
-        if(stick.getRawButton(4))
+        if(stick.getRawButton(4))//climb up, dont allow the driver to reverse because it has a rachet anyway
         {
             climberSpark.set(.5);
         }
@@ -80,19 +80,19 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
         {
             climberSpark.set(0);
         }
-        if(stick.getPOV()==90)
+        if(stick.getPOV()==90)//move the climber left and right on the bar
         {
-            climbRollerTalon.set(.5);
+            climbRollerTalon.set(ControlMode.PercentOutput,.5);
         }
         else if(stick.getPOV()==270)
         {
-            climbRollerTalon.set(-.5);
+            climbRollerTalon.set(ControlMode.PercentOutput,-.5);
         }
         else
         {
-            climbRollerTalon.set(0);
+            climbRollerTalon.set(ControlMode.PercentOutput,0);
         }
-        if(stick.getRawButton(5))
+        if(stick.getRawButton(5))//open and close the door at the end of the ramp
         {
             doorPiston.set(Value.kForward);
         }
@@ -101,7 +101,7 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
             doorPiston.set(Value.kReverse);
         }
     }
-    static void setSpinner(Joystick stick)
+    static void setSpinner(Joystick stick)//control the spinner talon and the color piston
     {
         double stickVal = stick.getRawAxis(3)-stick.getRawAxis(4);
         if(Math.abs(stickVal)>.05)
@@ -133,7 +133,7 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
             }
         }
     }
-    public static void controlSensorPiston(double val)
+    public static void controlSensorPiston(double val)//does all the timeing and piston firing, kinda messy tbh
     {
         if(Math.abs(val)>.05)//put piston out when you want to move
         {
@@ -141,17 +141,17 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
             {
                 spinUpTimer.start();
                 colorSensorPiston.set(Value.kForward);
-                spinnderTalon.set(0);
+                spinnderTalon.set(ControlMode.PercentOutput,0);
             }
             else if(spinUpTimer.get()>.1)
             {
                 colorSensorPiston.set(Value.kForward);
-                spinnderTalon.set(val);
+                spinnderTalon.set(ControlMode.PercentOutput,val);
             }
         }
         else
         {
-            spinnderTalon.set(0);
+            spinnderTalon.set(ControlMode.PercentOutput,0);
             if(spinUpTimer.get()>0)
             {
                 spinUpTimer.stop();
@@ -172,10 +172,10 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
     }
     public static void resetActuators() 
     {
-        spinnderTalon.set(0);
+        spinnderTalon.set(ControlMode.PercentOutput,0);
         harvySpark.set(0);
         climberSpark.set(0);
-        climbRollerTalon.set(0);
+        climbRollerTalon.set(ControlMode.PercentOutput,0);
         doorPiston.set(Value.kForward);
         colorSensorPiston.set(Value.kReverse);
     }
@@ -189,7 +189,7 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
         }
         else
         {
-            spinnderTalon.set(0);
+            spinnderTalon.set(ControlMode.PercentOutput,0);
         }
     }
     public static boolean isGood(String gameData)

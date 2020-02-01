@@ -6,7 +6,7 @@ import com.revrobotics.ColorSensorV3;
 import edu.wpi.first.wpilibj.I2C.Port;
 
 
-public class Sensors {
+public class Sensors {//does the communication with the color sensor. it is mostly all done with the api
     
     static ColorSensorV3 cSensor;//red, yellow,green,cyan
     static int[][] colors = new int[][]{{1800,1300,550},{2500,4500,1100},{650,2200,1000},{200,2400,2500}};
