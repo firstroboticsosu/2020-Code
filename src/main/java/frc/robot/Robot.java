@@ -7,16 +7,14 @@
 
 package frc.robot;
 
-import java.io.IOException;
-import java.util.Arrays;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.lib.control.Path;
+import frc.lib.geometry.Rotation2d;
+import frc.robot.Drive.DriveControlState;
 
 /**
  * This is a demo program showing the use of the RobotDrive class, specifically
@@ -29,26 +27,22 @@ public class Robot extends TimedRobot {
 	private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
-  private Path bottomPath = new Path(Arrays.asList(new Path.Waypoint(position, speed)));
   
   @Override
   public void robotInit() {
     Drive.init();
+    PoseEstimator.reset();//reset the pose estimator
     Mech.init();
     Sensors.init();
     driveStick = new Joystick(0);
     mechStick = new Joystick(1);
     Lighting.reset();
-    try {
-      Auto.init();
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    PoseEstimator.init();
     m_chooser.setDefaultOption("Dead Reckon Forward", Constants.kDefaultAuto);//add the auto options to
     m_chooser.addOption("Bottom", Constants.kBottom);
     m_chooser.addOption("Middle", Constants.kMiddle);
     SmartDashboard.putData("Auto choices", m_chooser);
+    Drive.driveControlState = DriveControlState.OPEN_LOOP;
   }
   @Override
   public void disabledInit() {
@@ -59,6 +53,7 @@ public class Robot extends TimedRobot {
     // Drive.driveLeftTalon.set(0);//reset all motors for saftey, even if first does it for us
     // Drive.driveRightTalon.set(0);
     Mech.resetActuators();
+    Auto.reset();
   }
   @Override 
   public void robotPeriodic() {//runs all the time, put sensor and led stuff here
@@ -70,10 +65,12 @@ public class Robot extends TimedRobot {
     SmartDashboard.putString("Sensed Color", Sensors.getColor()+"");//put some stuff to the smart dashboard
     SmartDashboard.putString("Field Color", Sensors.getFieldColor()+"");
     SmartDashboard.putString("Field Demand", DriverStation.getInstance().getGameSpecificMessage()+"");
+    Auto.createPaths();
   }
   @Override
   public void teleopInit() {
     Lighting.telop();
+    Drive.setVomp(true);
   }
   @Override
   public void teleopPeriodic() 
@@ -85,18 +82,24 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() 
   {
+    Drive.resetEncoders();//reset encoders for the pose estimator
+    PoseEstimator.reset();//reset the pose estimator
+    Drive.setVomp(true);
+    Sensors.setHeading(Rotation2d.fromDegrees(0));
     Lighting.auto();
     autonTimer.reset();
     autonTimer.start();
-    m_autoSelected = m_chooser.getSelected();
+    m_autoSelected = m_chooser.getSelected();//Constants.kBottom
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
     switch (m_autoSelected) {
       case Constants.kBottom:
-        Auto.autoStream(true);
+        // Auto.autoStream(true);
+        Auto.followPath(Auto.bottomPath, false);
         break;
       case Constants.kMiddle:
-        Auto.autoStream(false);
+        // Auto.autoStream(false);
+        Auto.followPath(Auto.middlePath, false);
         break;
       case Constants.kDefaultAuto:
       default:
@@ -120,7 +123,21 @@ public class Robot extends TimedRobot {
     }
     else
     {
-      Auto.runAuto();
+      if(Auto.pathFollowingController!=null)
+      {
+        Auto.updatePathFollower();
+      }
     }
+    PoseEstimator.run();
+  }
+  @Override
+  public void testInit() 
+  {
+    
+  }
+  @Override
+  public void testPeriodic() 
+  {
+    Drive.test();
   }
 }

@@ -1,9 +1,11 @@
 package frc.robot;
 
 
+import com.ctre.phoenix.sensors.PigeonIMU;
 import com.revrobotics.ColorSensorV3;
 
 import edu.wpi.first.wpilibj.I2C.Port;
+import frc.lib.geometry.Rotation2d;
 
 
 public class Sensors {//does the communication with the color sensor. it is mostly all done with the api
@@ -14,12 +16,29 @@ public class Sensors {//does the communication with the color sensor. it is most
     static int green = 0;
     static int blue = 0;
     static int prox = 0;
+
+    static Rotation2d gyro_heading;
+    static Rotation2d gyro_offset;
+    static PigeonIMU pidgey;
+
     enum MyColor
     {
         Red, Yellow, Green, Cyan, Unknown
     }
     static public void init() {
         cSensor = new ColorSensorV3(Port.kOnboard);
+        pidgey = new PigeonIMU(Constants.PIDGEY_ID);
+    }
+    
+    public static Rotation2d getHeading() {
+        return gyro_heading;
+    }
+
+    public static void setHeading(Rotation2d heading) {
+        System.out.println("SET HEADING: " + heading.getDegrees());
+        gyro_offset = heading.rotateBy(Rotation2d.fromDegrees(pidgey.getFusedHeading()).inverse());
+        System.out.println("Gyro offset: " + gyro_offset.getDegrees());
+        gyro_heading = heading;
     }
     static void pollSensors()
     {
@@ -27,6 +46,7 @@ public class Sensors {//does the communication with the color sensor. it is most
         green = cSensor.getGreen();
         blue = cSensor.getBlue();
         prox = cSensor.getProximity();
+        gyro_heading = Rotation2d.fromDegrees((pidgey.getFusedHeading()+360)%360);
     }
     static MyColor getFieldColor()//get what color the field system sees, assuming your controlling from your side of the alliance
     {
