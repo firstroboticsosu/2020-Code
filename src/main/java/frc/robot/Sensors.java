@@ -26,7 +26,7 @@ public class Sensors {//does the communication with the color sensor. it is most
         Red, Yellow, Green, Cyan, Unknown
     }
     static public void init() {
-        cSensor = new ColorSensorV3(Port.kOnboard);
+        //cSensor = new ColorSensorV3(Port.kOnboard);
         pidgey = new PigeonIMU(Constants.PIDGEY_ID);
     }
     
@@ -42,10 +42,11 @@ public class Sensors {//does the communication with the color sensor. it is most
     }
     static void pollSensors()
     {
-        red = cSensor.getRed();
-        green = cSensor.getGreen();
-        blue = cSensor.getBlue();
-        prox = cSensor.getProximity();
+        //red = cSensor.getRed();
+        //green = cSensor.getGreen();
+        //blue = cSensor.getBlue();
+        //prox = cSensor.getProximity();
+        //System.out.println(red+"\t"+green+"\t"+blue+"\t"+prox);
         gyro_heading = Rotation2d.fromDegrees((pidgey.getFusedHeading()+360)%360);
     }
     static MyColor getFieldColor()//get what color the field system sees, assuming your controlling from your side of the alliance

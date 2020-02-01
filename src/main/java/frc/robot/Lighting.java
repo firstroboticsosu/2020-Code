@@ -109,6 +109,10 @@ public class Lighting//my favorite class, controls the LEDs to match robot state
     {
         if(color!=currentDisplayed)
         {
+            if(DriverStation.getInstance().isOperatorControl())
+            {
+                color = MyColor.Unknown;
+            }
             sendColor(color);
         }
 	}

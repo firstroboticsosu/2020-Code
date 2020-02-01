@@ -2,86 +2,18 @@ package frc.robot;
 
 import java.util.ArrayList;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-
-import edu.wpi.first.wpilibj.Timer;
-import frc.lib.control.AdaptivePurePursuitController;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import frc.lib.control.Path;
 import frc.lib.control.Path.Waypoint;
-import frc.lib.geometry.Pose2d;
 import frc.lib.geometry.Translation2d;
-import frc.lib.geometry.Twist2d;
 import frc.lib.util.DriveSignal;
-import frc.robot.Drive.DriveControlState;
 
 class Auto 
-{
-    // static BufferedTrajectoryPointStream pointStreaml;//the stream for the talons
-    // static BufferedTrajectoryPointStream pointStreamr;
-    // static TrajectoryPoint[][] autoBottom;//our two auto routines
-    // static TrajectoryPoint[][] autoMiddle;
-    // static void init()
-    // {
-        // System.out.println("Loading Motion Profiles");//Print we are loading so if we crash we know why
-        // autoBottom = Pathing.loadByName("bottom");
-        // autoMiddle = Pathing.loadByName("middle");
-        // pointStreaml = new BufferedTrajectoryPointStream();
-        // pointStreamr = new BufferedTrajectoryPointStream();
-        // runningAutoMP = false;
-        // Drive.driveLeftTalon.getSensorCollection().setQuadraturePosition(0, 10);//reset encoders because why not
-        // Drive.driveRightTalon.getSensorCollection().setQuadraturePosition(0, 10);
-    // }
-    // static void autoStream(boolean bottom)//start the streams
-    // {
-    //     Drive.driveRightTalon.clearMotionProfileTrajectories();//creat out any old data in case we havent restarted the roborio since running auto last
-    //     Drive.driveLeftTalon.clearMotionProfileTrajectories();
-    //     if(bottom)//choose the correct auto to run and write it to the talons api
-    //     {
-    //         pointStreamr.Write(autoBottom[1]);
-    //         pointStreaml.Write(autoBottom[0]);
-    //     }
-    //     else
-    //     {
-    //         pointStreamr.Write(autoMiddle[1]);
-    //         pointStreaml.Write(autoMiddle[0]);
-    //     }
-    //     runningAutoMP = false;
-    // }
-    // static boolean runningAutoMP = false;//this makes sure we only start the stream onces
-    // static void runAuto()
-    // {
-    //     if(!runningAutoMP)
-    //     {
-    //         Drive.driveRightTalon.startMotionProfile(pointStreamr, 10, ControlMode.MotionProfile);
-    //         Drive.driveLeftTalon.startMotionProfile(pointStreaml, 10, ControlMode.MotionProfile);
-    //         //start the motion profiles because we havent yet and write down we started them
-    //         runningAutoMP = true;
-    //     }
-    //     if(Drive.driveRightTalon.isMotionProfileFinished())//if we are finished eject balls
-    //     {
-    //         Drive.tank(0, 0);//stop the motors
-    //         Mech.doorPiston.set(Value.kReverse);
-    //         if(Robot.autonTimer.get()<.5)//wait for the piston to go down and then run belt
-    //         {
-    //             Mech.harvySpark.set(0);
-    //         }
-    //         else
-    //         {
-    //             Mech.harvySpark.set(.3);
-    //         }
-    //     }
-    //     else
-    //     {
-    //         Robot.autonTimer.reset();//keep timer at 0 till we done
-    //         Mech.doorPiston.set(Value.kForward);//keep door closed and belt off until we are done with motion profile
-    //         Mech.harvySpark.set(0);
-    //     }
-    //     System.out.println("Auto Status: "+Drive.driveRightTalon.isMotionProfileFinished()+"\t"+Drive.driveLeftTalon.getActiveTrajectoryPosition()+"\t"+Drive.driveRightTalon.getActiveTrajectoryPosition());
-    // }
-
-    
+{    
     static Path bottomPath;
     static Path middlePath;
+    static String m_autoSelected = "";
+
     static void createPaths() 
     {
         ArrayList<Waypoint> middlePathList = new ArrayList<Waypoint>();
@@ -105,54 +37,54 @@ class Auto
         bottomPathList.add(new Path.Waypoint(new Translation2d(15.640668906982944,-5.827186653963009), 2));
         bottomPath = new Path(bottomPathList);
     }
-    static void reset()
-    {
-        pathFollowingController = null;
-    }
-    //copied from 4145 :)
-    static AdaptivePurePursuitController pathFollowingController;
     
-    public static void followPath(Path path, boolean reversed) {
-        pathFollowingController = new AdaptivePurePursuitController(Constants.PATH_FOLLOWING_LOOKAHEAD,
-                Constants.PATH_FOLLOWING_MAX_ACCELERATION, Constants.DRIVETRAIN_UPDATE_RATE, path, reversed, 1);
-        Drive.driveControlState = DriveControlState.PATH_FOLLOWING_CONTROL;
-        updatePathFollower();
-    }
-    static double metersToRotations(double meters) {
-        return meters / (Constants.WHEEL_DIAMETER * Math.PI);
+    public static void autoInit(String autoSelected){
+        m_autoSelected = autoSelected;// Constants.kBottom
+        System.out.println("Auto selected: " + m_autoSelected);
+        switch (m_autoSelected) {
+            case Constants.kBottom:
+                Drive.followPath(Auto.bottomPath, false);
+            break;
+
+            case Constants.kMiddle:
+                Drive.followPath(Auto.middlePath, false);
+            break;
+
+                case Constants.kDefaultAuto:
+
+                break;
+
+            default:
+            break;
+        }
+
     }
 
-    static double metersPerSecondToRpm(double mps) {
-        return metersToRotations(mps) * 60;
-    }
-    public static void updatePathFollower() {
-        Pose2d robot_pose = PoseEstimator.getLatestFieldToVehicle().getValue();
-        Twist2d command = pathFollowingController.update(robot_pose, Timer.getFPGATimestamp());
-        DriveSignal setpoint = Kinematics.inverseKinematics(command);
+    public static void autoUpdate(double autoTime){
 
-        // Scale the command to respect the max velocity limits
-        double max_vel = 0.0;
-        max_vel = Math.max(max_vel, Math.abs(setpoint.getLeft()));
-        max_vel = Math.max(max_vel, Math.abs(setpoint.getRight()));
-        if (max_vel > Constants.PATH_FOLLOWING_MAX_VELOCITY) {
-            double scaling = Constants.PATH_FOLLOWING_MAX_VELOCITY / max_vel;
-            setpoint = new DriveSignal(setpoint.getLeft() * scaling, setpoint.getRight() * scaling);
+        switch (m_autoSelected) {
+            case Constants.kBottom:
+                Drive.updatePathFollower();
+            break;
+
+            case Constants.kMiddle:
+                Drive.updatePathFollower();
+            break;
+
+            default:
+                if (autoTime < 2.0) {
+                    //Drive.setVelocity(new DriveSignal(Drive.RPMToUnitsPer100Ms(Drive.metersPerSecondToRpm(1)),
+                        //Drive.RPMToUnitsPer100Ms(Drive.metersPerSecondToRpm(1))));
+                    Drive.tank(0.5, 0.5);
+                    Mech.doorPiston.set(Value.kForward);
+                    Mech.harvySpark.set(0);
+                } else {
+                    Drive.tank(0, 0);
+                    //Mech.doorPiston.set(Value.kReverse);
+                    //Mech.harvySpark.set(.3);
+                }
+            break;
         }
-        setVelocity(setpoint);
-        // driveTank(metersPerSecondToRpm(setpoint.getLeft()), metersPerSecondToRpm(setpoint.getRight()));
     }
-    public static boolean isFinishedPath() {
-        return (Drive.driveControlState == DriveControlState.PATH_FOLLOWING_CONTROL && pathFollowingController.isDone())
-                || Drive.driveControlState != DriveControlState.PATH_FOLLOWING_CONTROL;
-    }
-    public static void setVelocity(DriveSignal signal) {
-        if (Drive.driveControlState != DriveControlState.PATH_FOLLOWING_CONTROL) {
-            System.out.println("Switching to velocity control");
-            Drive.driveLeftTalon.set(ControlMode.Velocity, 0);
-            Drive.driveRightTalon.set(ControlMode.Velocity, 0);
-            Drive.driveControlState = DriveControlState.PATH_FOLLOWING_CONTROL;
-        }
-        Drive.driveLeftTalon.set(ControlMode.Velocity, signal.getLeft());
-        Drive.driveRightTalon.set(ControlMode.Velocity, signal.getRight());
-    }
+
 }

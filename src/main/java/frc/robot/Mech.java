@@ -49,7 +49,7 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
         
         resetActuators();
     }
-    static void mech(Joystick stick)
+    static void mech(Joystick stick, Joystick second)
     {
         setSpinner(stick);
         /*if(stick.getRawButton(1))
@@ -66,7 +66,7 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
         }*/
         if(stick.getRawButton(2))//everrything here just runs motors based on buttons and axis. nothing special
         {
-            harvySpark.set(stick.getRawAxis(1)/2);//turbo mode if ball stuck
+            harvySpark.set(stick.getRawAxis(1));//turbo mode if ball stuck
         }
         else
         {
@@ -74,11 +74,9 @@ public class Mech//hold  the motors and relevant code for the contorl of those m
         }
         if(stick.getRawButton(4))//climb up, dont allow the driver to reverse because it has a rachet anyway
         {
-            climberSpark.set(.5);
-        }
-        else
-        {
-            climberSpark.set(0);
+            climberSpark.set(.3);
+        }else{
+            climberSpark.set(-0.02);
         }
         if(stick.getPOV()==90)//move the climber left and right on the bar
         {
