@@ -3,23 +3,24 @@ package frc.robot;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+
 
 import edu.wpi.first.wpilibj.Joystick;
 
 public class Drive//holds the talons for driving and sets them up. Also does a little math
 {
-    static WPI_TalonSRX driveRightTalon;//1
-    static WPI_TalonSRX driveLeftTalon;//2
-    static WPI_VictorSPX driveRightVictor;//3
-    static WPI_VictorSPX driveLeftVictor;//4
+    static TalonSRX driveRightTalon;//1
+    static TalonSRX driveLeftTalon;//2
+    static VictorSPX driveRightVictor;//3
+    static VictorSPX driveLeftVictor;//4
     static void init()
     {
-        driveRightTalon = new WPI_TalonSRX(Constants.DRIVE_RIGHT_TALON_ID);//init controllers
-        driveLeftTalon = new WPI_TalonSRX(Constants.DRIVE_LEFT_TALON_ID);
-        driveRightVictor = new WPI_VictorSPX(Constants.DRIVE_RIGHT_VICTOR_ID);
-        driveLeftVictor = new WPI_VictorSPX(Constants.DRIVE_LEFT_VICTOR_ID);
+        driveRightTalon = new TalonSRX(Constants.DRIVE_RIGHT_TALON_ID);//init controllers
+        driveLeftTalon = new TalonSRX(Constants.DRIVE_LEFT_TALON_ID);
+        driveRightVictor = new VictorSPX(Constants.DRIVE_RIGHT_VICTOR_ID);
+        driveLeftVictor = new VictorSPX(Constants.DRIVE_LEFT_VICTOR_ID);
         
         driveRightVictor.follow(driveRightTalon);//setup followers so we cant set the motors within a gearbox to go opposite directions 
         driveLeftVictor.follow(driveLeftTalon);
