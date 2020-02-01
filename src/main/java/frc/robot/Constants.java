@@ -1,152 +1,26 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj.Joystick;
-import frc.lib.util.HIDHelper;
+class Constants
+{//file for all of our constants, more stuff could be moved here
+	public static double kSensorUnitsPerMeter = 8459.75*(1.0/3.28084);//ticks per meter converted to ft because PathPlanner is only in ft
+	//data: 8438, 8493, 8475, 8433
+	//determined by experimentation, could be determinded mathematically I guess
+	public static int kPrimaryPIDSlot = 0;
+	public static double drivekP = .1;
+	public static double drivekI = 0;
+	public static double drivekD = 1;
+	public static int pathPlannerTimeStepMs = 10;
+	public static int spin3ticks = 4096*64;
+	public static final String kDefaultAuto = "Default";
+	public static final String kBottom = "Bottom";
+	public static final String kMiddle = "Middle";
 
-public class Constants {
-
-    /**
-     * device ID declarations ---------------------------------
-     */
-
-    //Talon IDs
-    public static final int DRIVE_FRONT_LEFT_ID = 1;
-    public static final int DRIVE_BACK_LEFT_ID = 3;
-    public static final int DRIVE_FRONT_RIGHT_ID = 2;
-    public static final int DRIVE_BACK_RIGHT_ID = 4;
-    public static final int SPINNY_ID = 5;
-    public static final int LIFT_ROLLER_ID = 6;
-    public static final int RAMP_ID = 9;
-
-    //PWM ports
-    public static final int LIFT_WINCH_ID = 1;
-
-    //solenoid assignments
-    public static final int FLAP_PISTON_FORWARD_ID = 0; //TODO pick these
-    public static final int FLAP_PISTON_REVERSE_ID = 1;
-    public static final int COLOR_OUT_ID = 4;
-    public static final int COLOR_IN_ID = 5;
-
-    //Pigeon ID
-    public static final int PIGEON_IMU_ID = 1;
-
-    /**
-     * Drivetrain tuned values --------------------------------
-     */
-
-    //Physical Constants
-    public static final double DRIVE_WHEEL_DIAMETER_INCHES = 7.75; // 7 3/4
-    public static final double DRIVE_WHEEL_RADIUS_INCHES = DRIVE_WHEEL_DIAMETER_INCHES / 2.0;
-    public static final double TRACK_SCRUB_FACTOR = 2.38;  // determined 2.38
-    public static final double TRACK_WIDTH_INCHES = 25;
-    public static final double ROBOT_LINEAR_INERTIA = 30;  // kg roughly 60 lb
-    public static final double ROBOT_ANGULAR_INERTIA = 8.0;  // kg m^2 TODO tune just a guess
-    public static final double ROBOT_ANGULAR_DRAG = 20.0;  // N*m / (rad/sec) TODO tune just a guess
-    public static final double ROBOT_MAX_VELOCITY = 72.0; // in/s
-    public static final double ROBOT_MAX_ACCEL = 80.0; // in/s^2
-    public static final double ROBOT_MAX_VOLTAGE = 11.0; // V
-
-
-    public static final double PATH_KX = 4.0;  //
-    public static final double PATH_LOOK_AHEAD_TIME = 0.4;  // seconds to look ahead along the path for steering
-    public static final double PATH_MIN_LOOK_AHEAD_DIST = 12.0;  // inches
-    public static final double PATH_MIN_LOOK_AHEAD_VEL = 24.0;  // inches/s
-    public static final double PATH_MAX_LOOK_AHEAD_DIST = 60.0;  // inches
-    public static final double PATH_MAX_LOOK_AHEAD_VEL = 96.0;  // inches/s
-    public static final double PATH_MAX_VEL = 96.0;  // inches/s
-    
-    //Electrical Constants
-    public static final double DRIVE_V_INTERCEPT = 1.04395;  // V     1.04395
-    public static final double DRIVE_Kv = 0.32725;  // V per rad/s    0.32725
-    public static final double DRIVE_Ka = 0.12545;  // V per rad/s^2  0.12545
-    public static final double DRIVE_VCOMP = 11.0; //V                11.0
-    public static final double DRIVE_ENCODER_PPR = 4096.0; //encoder counts per revolution
-
-    //PID Constants
-    public static final double ANGLE_KP = 0.04; // 0.065;
-    public static final double ANGLE_KI = 0.0; // 0.00125;
-    public static final double ANGLE_KD = 0.0; // 0.1
-    public static final double ANGLE_IMAX = 1.0; // integral windup limit
-
-    public static final double DRIVE_RIGHT_KP = 0.40; //0.40
-    public static final double DRIVE_RIGHT_KI = 0.0;
-    public static final double DRIVE_RIGHT_KD = 30.0; //30
-    public static final double DRIVE_RIGHT_KF = 0.50; 
-
-    public static final double DRIVE_LEFT_KP = 0.44; //0.44
-    public static final double DRIVE_LEFT_KI = 0.0; 
-    public static final double DRIVE_LEFT_KD = 30.0; //30
-    public static final double DRIVE_LEFT_KF = 0.50;
-
-    /**
-     * Spinny Configuration --------------------------------------
-     */
-    // Forward is clockwise, backwards is counter-clockwise
-    // Percent speed at which to run for manual forward/backward
-    public static final double SPINNY_WHEEL_DIAMETER = 3.0; //in
-    public static final double SPINNY_MAX_VEL = 50; //in/s
-    public static final double SPINNY_MAX_ACCEL = 30; //in/s^2
-
-    public static final double SPINNY_KP = 0.44; //0.44
-    public static final double SPINNY_KI = 0.0;
-    public static final double SPINNY_KV = 30.0; //30
-    public static final double SPINNY_KFFV = 0.50;
-    public static final double SPINNY_KFFA = 0.50;
-    public static final double SPINNY_KS = 0.50;
-
-    public static final double SPINNY_MANUAL_FORWARD = 0.5;
-    public static final double SPINNY_MANUAL_BACKWARD = -0.5;
-    public static final double AUTO_COLOR_FORWARD_SPEED = 0;
-	public static final double AUTO_COLOR_BACKWARD_SPEED = 0;
-
-    // Time (seconds) in which to stay in state INACTIVE_ENCODING before moving to INACTIVE
-    public static final int INACTIVE_ENCODING_STATE_TIME = 3;
-
-    public static final double SPINNY_VCOMP = 11.0; //V                11.0
-
-    // Center points for color inputs
-    public static final int[] BLUE_IDEAL_COLOR_READINGS = {0, 255, 255};
-    public static final int[] GREEN_IDEAL_COLOR_READINGS = {0, 255, 0};
-    public static final int[] RED_IDEAL_COLOR_READINGS = {255, 0, 0};
-    public static final int[] YELLOW_IDEAL_COLOR_READINGS = {255, 255, 0};
-
-    // The maximum amount of deviation away from a color before it's not that color
-    public static final int MAXIMUM_TOLERANCE = 60;
-
-    /**
-     * Ramp Configuration --------------------------------------
-     */
-    public static final double LOWER_RAMP_KP = 0.1;
-    public static final double LOWER_RAMP_KI = 1e-4;
-    public static final double LOWER_RAMP_KD = 1;
-    public static final double LOWER_RAMP_KIZ = 0;
-    public static final double LOWER_RAMP_KFF = 0;
-    public static final double kMaxOutput = 1;
-    public static final double kMinOutput = -1;
-
-    public static final double RAMP_VCOMP = 11.0; //V                11.0
-
-    public static final double LOWER_RAMP_UP_SPEED = .2;
-    public static final double LOWER_RAMP_DOWN_SPEED = -.2;
-
-    /**
-     * General Configuration --------------------------------------
-     */
-
-    //MP Test mode values
-    public static final boolean ENABLE_MP_TEST_MODE = false; //enables motion profiling test across all modes
-    public static final double MP_TEST_SPEED = 36; //in /s
-    public static final boolean RAMPUP = false;
-
-    //Stick Constants
-    public static final Joystick MASTER = new Joystick(0);
-    public static final HIDHelper.HIDConstants MASTER_STICK = new HIDHelper.HIDConstants(MASTER, 0.10, 1.00, 1.00, 0.50, 3);
-
-    //Startup Constants
-    public static final double LOOPER_DT = 0.01; //dt in seconds
-	public static final double PATH_MAX_ACCEL = 0;
-	
+	public static final int DRIVE_RIGHT_TALON_ID = 1;
+	public static final int DRIVE_LEFT_TALON_ID = 2;
+	public static final int DRIVE_RIGHT_VICTOR_ID = 3;
+	public static final int DRIVE_LEFT_VICTOR_ID = 4;
+	public static final int MECH_SPINNER_TALON_ID = 5;
+	public static final int MECH_CLIMBER_TALON_ID = 6;
+	public static final int MECH_HARVY_SPARK_ID = 9;
+	public static final int MECH_HARVY_CLIMBER_ID = 10;
 }
-
-
-

@@ -38,12 +38,7 @@ deploy {
 }
 
 // Set this to true to enable desktop support.
-def includeDesktopSupport = true
-
-repositories {
-    jcenter()
-    mavenCentral()
-}
+def includeDesktopSupport = false
 
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 4.
@@ -62,8 +57,6 @@ dependencies {
     // Enable simulation gui support. Must check the box in vscode to enable support
     // upon debugging
     simulation wpi.deps.sim.gui(wpi.platforms.desktop, false)
-
-    compile 'gov.nist.math:jama:1.0.3'
 }
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
@@ -72,58 +65,4 @@ dependencies {
 jar {
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
-}
-
-//build version plugin below this line 
-tasks.register("DoVersionID"){
-    doFirst {
-        String filePath = 'src/main/deploy/version.dat'
-        String versionFile = file(filePath).text //maintain path to versionFile file
-        
-        int[] versionIDLoc = findPos("VERSION_ID", versionFile)
-        int versionID = 1 + (versionFile.substring(versionIDLoc[0], versionIDLoc[1] - 1) as Integer) //get version value from the versionFile file
-        printf("New Version ID: %d", versionID)
-
-        int[] authorLoc = findPos("BUILD_AUTHOR", versionFile)
-        String newAuthor = System.getProperty('user.name')
-        
-        int[] timeLoc = findPos("BUILD_DATE", versionFile)
-        String newTime = new Date().format("yyyyMMdd-HH:mm:ss", TimeZone.getTimeZone('EST'))
-
-        //recreate file with new inputs
-        String newVersionFile = versionFile.substring(0,versionIDLoc[0]) + versionID + ";"  //VERSION_ID
-        newVersionFile += versionFile.substring(versionIDLoc[1], authorLoc[0]) + newAuthor + ";" //BUILD_AUTHOR
-        newVersionFile += versionFile.substring(authorLoc[1], timeLoc[0]) + newTime + ";" //BUILD_DATE
-        newVersionFile += versionFile.substring(timeLoc[1]) //rest of file
-        file(filePath).text = newVersionFile // update versionFile class
-    }
-}
-compileJava.dependsOn DoVersionID
-
-
-//helper function to parse data file for variables
-def int[] findPos(String name, String file){
-    int loc = file.indexOf(name) //variable to find
-    if(loc < 0){
-        throw new GradleException(name +' not found in file! \nverify its presence and re-build')
-    }
-    int i = loc + name.length()
-    char curr = 0
-    while(curr != '=' && i < loc + 40){ //locate the equals sign after variable
-        curr = file.charAt(i)
-        i++
-    }
-    if(i >= loc + 39){
-        throw new GradleException('Could not find = within 30 characters after ' + name)
-    }
-    int equalsPos = i
-    //printf("found equal sign at: %d\n", i)
-    while(curr != ';' && i < loc + 60){ //locate the semicolon
-        curr = file.charAt(i)
-        i++
-    }
-    if(i >= loc + 59){
-        throw new GradleException('Could not find line ; within 50 characters after ' + name)
-    }
-    return [equalsPos, i]
 }
