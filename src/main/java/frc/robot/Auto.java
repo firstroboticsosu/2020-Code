@@ -72,16 +72,16 @@ class Auto
             break;
 
             default:
-                if (autoTime < 2.0) {
+                if (autoTime < 3.0) {
                     //Drive.setVelocity(new DriveSignal(Drive.RPMToUnitsPer100Ms(Drive.metersPerSecondToRpm(1)),
                         //Drive.RPMToUnitsPer100Ms(Drive.metersPerSecondToRpm(1))));
-                    Drive.tank(0.5, 0.5);
+                    Drive.tank(0.5, 0.55);
                     Mech.doorPiston.set(Value.kForward);
                     Mech.harvySpark.set(0);
                 } else {
                     Drive.tank(0, 0);
-                    //Mech.doorPiston.set(Value.kReverse);
-                    //Mech.harvySpark.set(.3);
+                    // Mech.doorPiston.set(Value.kReverse);
+                    // Mech.harvySpark.set(.3);
                 }
             break;
         }

@@ -11,6 +11,7 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.control.AdaptivePurePursuitController;
 import frc.lib.control.Path;
 import frc.lib.geometry.*;
@@ -51,16 +52,16 @@ public class Drive// holds the talons for driving and sets them up. Also does a 
     }
 
     public static void resetEncoders() {
-        Drive.driveRightTalon.setSelectedSensorPosition(0);
-        Drive.driveLeftTalon.setSelectedSensorPosition(0);
+        driveRightTalon.setSelectedSensorPosition(0);
+        driveLeftTalon.setSelectedSensorPosition(0);
     }
 
     public static double getLeftEncoderDistance() {
-        return ticksToMeters(Drive.driveLeftTalon.getSelectedSensorPosition());
+        return ticksToMeters(driveLeftTalon.getSelectedSensorPosition());
     }
 
     public static double getRightEncoderDistance() {
-        return ticksToMeters(Drive.driveRightTalon.getSelectedSensorPosition());
+        return ticksToMeters(driveRightTalon.getSelectedSensorPosition());
     }
 
     private static void configTalons() {
@@ -148,8 +149,7 @@ public class Drive// holds the talons for driving and sets them up. Also does a 
             left_demand = Constants.MP_TEST_SPEED * Constants.kSensorUnitsPerMeter;
             right_demand = Constants.MP_TEST_SPEED * Constants.kSensorUnitsPerMeter;
         }
-        driveLeftTalon.set(ControlMode.Velocity, left_demand);
-        driveRightTalon.set(ControlMode.Velocity, right_demand);
+        setVelocity(new DriveSignal(left_demand, right_demand));
     }
 
     public static void reset() {
@@ -215,6 +215,10 @@ public class Drive// holds the talons for driving and sets them up. Also does a 
             Drive.driveRightTalon.set(ControlMode.Velocity, 0);
             Drive.driveControlState = DriveControlState.PATH_FOLLOWING_CONTROL;
         }
+        SmartDashboard.putNumber("left target", signal.getLeft());
+        SmartDashboard.putNumber("right target", signal.getRight());
+        SmartDashboard.putNumber("left val", driveLeftTalon.getSelectedSensorVelocity());
+        SmartDashboard.putNumber("right val", driveRightTalon.getSelectedSensorVelocity());
         Drive.driveLeftTalon.set(ControlMode.Velocity, signal.getLeft());
         Drive.driveRightTalon.set(ControlMode.Velocity, signal.getRight());
     }

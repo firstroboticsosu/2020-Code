@@ -93,6 +93,7 @@ public class Robot extends TimedRobot {
     Lighting.auto();
     autonTimer.reset();
     autonTimer.start();
+    Auto.autoInit(m_chooser.getSelected());
   }
 
   @Override
@@ -107,6 +108,6 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testPeriodic() {
-    // Drive.test();
+    Drive.test();
   }
 }

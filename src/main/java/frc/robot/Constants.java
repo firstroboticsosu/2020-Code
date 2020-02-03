@@ -35,12 +35,12 @@ class Constants
 
 
 
-	public static final double DRIVE_LEFT_KF = .2;
-	public static final double DRIVE_LEFT_KP = .1;
+	public static final double DRIVE_LEFT_KF = .3;
+	public static final double DRIVE_LEFT_KP = .2;
 	public static final double DRIVE_LEFT_KI = 0;
 	public static final double DRIVE_LEFT_KD = 1;
-	public static final double DRIVE_RIGHT_KF = .2;
-	public static final double DRIVE_RIGHT_KP = .1;
+	public static final double DRIVE_RIGHT_KF = .3;
+	public static final double DRIVE_RIGHT_KP = .2;
 	public static final double DRIVE_RIGHT_KI = 0;
 	public static final double DRIVE_RIGHT_KD = 1;
 	public static final double DRIVE_VCOMP = 10;
@@ -54,7 +54,7 @@ class Constants
 	public static final double PATH_FOLLOWING_LOOKAHEAD = 1;
 	public static final double PATH_FOLLOWING_MAX_VELOCITY = 0;
 	public static final double WHEEL_DIAMETER = 0.1524;//meters
-	public static final double MP_TEST_SPEED = 1;
+	public static final double MP_TEST_SPEED = 0.3;
 
 	public static boolean PROFILE_TESTING = false;
 	public static boolean RAMP_UP = false;
